@@ -1,37 +1,67 @@
-import pika
+# pagos/consumer.py
 import json
+import pika
 
+
+from django.shortcuts import render
+
+from urllib.parse import quote
+from django.shortcuts import redirect
+from django.urls import reverse
+import os
+import django
+# Configura el entorno de Django para que el script pueda usar sus modelos y configuraciones
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gateway_de_pagos.settings')  # Reemplaza con el nombre de tu proyecto
+django.setup()
+# Suponiendo que tienes estos modelos
+from .models import Pagador, Destinatario
+
+from django.shortcuts import render
+from django.http import HttpRequest
+from .models import Pagador, Destinatario  # Asegúrate de que la ruta sea correcta
+from .forms import PagoForm  # Asegúrate de que la ruta sea correcta
+import json
 def callback(ch, method, properties, body):
-    # Procesar el evento de reserva que se recibe
-    print(f" [x] Evento recibido: {body.decode()}")
-    reserva_event = json.loads(body)
-    procesar_pago(reserva_event)
+    reserva_data = json.loads(body)
 
-def procesar_pago(reserva_event):
-    print(f" [x] Procesando pago para reserva: {reserva_event['reserva_id']}, monto: {reserva_event['amount']}")
-    # Aquí implementarías la lógica para realizar el pago
-    # Después de procesar el pago, podrías publicar un evento de confirmación de pago
+    # Crear y guardar los objetos Pagador y Destinatario
+    pagador = Pagador.objects.create(
+        nombre=reserva_data['pagador']['nombre'],
+        apellido=reserva_data['pagador']['apellido'],
+        email=reserva_data['pagador']['email'],
+        telefono=reserva_data['pagador']['telefono']
+    )
 
-#Gateway de pagos se suscribe a los topicos que contienen eventos de interes
-def suscribir_a_reservas():
+    destinatario = Destinatario.objects.create(
+        nombre=reserva_data['destinatario']['nombre']
+    )
+
+    # Imprimir los detalles por consola
+    print("Reserva recibida:")
+    print(f"Pagador: {pagador.nombre} {pagador.apellido}")
+    print(f"Email: {pagador.email}")
+    print(f"Teléfono: {pagador.telefono}")
+    print(f"Destinatario: {destinatario.nombre}")
+
+    # No se redirige en este caso, ya que estamos en el contexto de un consumidor
+
+
+def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
 
-    # Declarar el Exchange de tipo 'topic'
-    channel.exchange_declare(exchange='reservas_exchange', exchange_type='topic')
+    # Declarar el intercambio (exchange) y la cola (queue)
+    channel.exchange_declare(exchange='reservas', exchange_type='topic')
+    channel.queue_declare(queue='reserva_queue')
 
-    # Declarar la cola para gateway de pagos
-    channel.queue_declare(queue='gateway_pagos')
+    # Vincular la cola al intercambio
+    channel.queue_bind(exchange='reservas', queue='reserva_queue', routing_key='reserva.iniciada')
 
-    # Enlazar la cola al exchange con la clave de enrutamiento para eventos de reservas nuevas
-    channel.queue_bind(exchange='reservas_exchange', queue='gateway_pagos', routing_key='reservas.nueva') #reservas.nueva es un evento dentro del topico reservas
+    # Establecer el consumidor
+    channel.basic_consume(queue='reserva_queue', on_message_callback=callback, auto_ack=True)
 
-    print(" [*] Esperando eventos de reservas...")
-
-    # Consumir los mensajes desde la cola de gateway_pagos
-    channel.basic_consume(queue='gateway_pagos', on_message_callback=callback, auto_ack=True)
-
+    print("Esperando reservas. Presiona CTRL+C para salir.")
     channel.start_consuming()
 
 if __name__ == '__main__':
-    suscribir_a_reservas()
+    main()
