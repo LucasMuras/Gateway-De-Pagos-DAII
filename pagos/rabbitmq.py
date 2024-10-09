@@ -53,7 +53,7 @@ def escuchar_topicos():
     # Es decir: todo lo que venga de backoffice, se "almacena" en la cola de backoffice que creamos
     # Solo se almacerarán los eventos que tengan la clave según "routing_key"
     channel.queue_declare(queue='backoffice_queue')
-    channel.queue_bind(exchange='beckoffice', queue='backoffice_queue', routing_key='reservaCancelada')
+    channel.queue_bind(exchange='backoffice', queue='backoffice_queue', routing_key='reservaCancelada')
 
     # Nos suscribimos a nuestra cola de backoffice y manejamos los eventos/mensajes que lleguen con el callback_backoffice
     channel.basic_consume(queue='backoffice_queue', on_message_callback=callback_backoffice, auto_ack=True)

@@ -18,23 +18,69 @@
 
     <form method="POST" action="{% url 'pago' %}">
         {% csrf_token %}
+
+        <!-- Método de Pago -->
         <label for="metodo_pago">Método de Pago:</label>
-        <select id="metodo_pago" name="metodo_pago">
+        <select id="metodo_pago" name="metodo_pago" required>
             <option value="tarjeta_credito">Tarjeta de Crédito</option>
             <option value="transferencia">Transferencia</option>
             <!-- Agrega más métodos según sea necesario -->
         </select>
         <br><br>
+
+        <!-- Número de Tarjeta -->
         <label for="numero_tarjeta">Número de Tarjeta:</label>
-        <input type="text" id="numero_tarjeta" name="numero_tarjeta" required>
+        <input type="text" id="numero_tarjeta" name="numero_tarjeta" maxlength="16" required>
         <br><br>
-        <label for="fecha_expiracion">Fecha de Expiración:</label>
+
+        <!-- Fecha de Expiración -->
+        <label for="fecha_expiracion">Fecha de Expiración (YYYY-MM-DD):</label>
         <input type="text" id="fecha_expiracion" name="fecha_expiracion" required>
         <br><br>
+
+        <!-- CVV -->
         <label for="cvv">CVV:</label>
-        <input type="text" id="cvv" name="cvv" required>
+        <input type="text" id="cvv" name="cvv" maxlength="3" required>
         <br><br>
+
+        <!-- Cuotas -->
+        <label for="cuotas">¿Deseas pagar en cuotas?</label>
+        <input type="checkbox" id="cuotas" name="cuotas">
+        <br><br>
+
+        <!-- Campo de Cantidad de Cuotas (oculto inicialmente) -->
+        <div id="cuotas_div" style="display: none;">
+            <label for="cantidad_cuotas">Cantidad de Cuotas:</label>
+            <input type="number" id="cantidad_cuotas" name="cantidad_cuotas" min="1" max="24">
+            <br><br>
+        </div>
+
         <button type="submit">Pagar</button>
     </form>
+
+    <!-- JavaScript para mostrar/ocultar el campo de cuotas -->
+    <script>
+        // Obtener el checkbox y el div de cuotas
+        const cuotasCheckbox = document.querySelector('#cuotas');
+        const cuotasDiv = document.getElementById('cuotas_div');
+
+        // Mostrar/ocultar el campo de cantidad de cuotas según el estado del checkbox
+        cuotasCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                cuotasDiv.style.display = 'block';
+            } else {
+                cuotasDiv.style.display = 'none';
+            }
+        });
+
+        // Verificar el estado del checkbox al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (cuotasCheckbox.checked) {
+                cuotasDiv.style.display = 'block';
+            } else {
+                cuotasDiv.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
