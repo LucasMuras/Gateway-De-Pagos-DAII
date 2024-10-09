@@ -2,6 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Pagador(models.Model):
+    idExterna = models.IntegerField()
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
     email = models.EmailField()
