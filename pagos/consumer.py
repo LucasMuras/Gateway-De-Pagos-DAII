@@ -26,21 +26,23 @@ def callback(ch, method, properties, body):
 
     # Crear y guardar los objetos Pagador y Destinatario
     pagador = Pagador.objects.create(
+        id_externa=reserva_data['pagador']['id_externa'],
         nombre=reserva_data['pagador']['nombre'],
         apellido=reserva_data['pagador']['apellido'],
+        dni=reserva_data['pagador']['dni'],
         email=reserva_data['pagador']['email'],
-        telefono=reserva_data['pagador']['telefono']
     )
 
     destinatario = Destinatario.objects.create(
-        nombre=reserva_data['destinatario']['nombre']
+        id_externa=reserva_data['destinatario']['id_externa'],
+        nombre=reserva_data['destinatario']['nombre'],
+        email=reserva_data['destinatario']['email'],
     )
 
     # Imprimir los detalles por consola
     print("Reserva recibida:")
     print(f"Pagador: {pagador.nombre} {pagador.apellido}")
     print(f"Email: {pagador.email}")
-    print(f"Teléfono: {pagador.telefono}")
     print(f"Destinatario: {destinatario.nombre}")
 
     # No se redirige en este caso, ya que estamos en el contexto de un consumidor

@@ -51,14 +51,17 @@ def crear_reserva(request):
     if request.method == 'POST':
         # Datos hardcodeados para el pagador y destinatario
         pagador = Pagador(
-            nombre="Juan",
-            apellido="Pérez",
-            email="juan.perez@example.com",
-            telefono="123456789"
+            id_externa=12345,
+            nombre="Vicente",
+            apellido="Vainilla",
+            dni=12345678,
+            email="mar.gon@example.com",
         )
         
         destinatario = Destinatario(
-            nombre="Tienda XYZ"
+            id_externa=54321,
+            nombre="Tienda LOL",
+            email="xyz@gmail.com"
         )
 
         # Suponiendo que el monto es enviado desde el formulario

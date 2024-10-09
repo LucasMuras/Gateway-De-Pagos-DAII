@@ -13,13 +13,16 @@ def enviar_reserva(pagador, destinatario, monto):
     # Crear el mensaje
     reserva_data = {
         'pagador': {
+            'id_externa': pagador.id_externa,
             'nombre': pagador.nombre,
             'apellido': pagador.apellido,
+            'dni': pagador.dni,
             'email': pagador.email,
-            'telefono': pagador.telefono,
         },
         'destinatario': {
+            'id_externa': destinatario.id_externa,
             'nombre': destinatario.nombre,
+            'email': destinatario.email,
         },
         'monto': monto,
     }
