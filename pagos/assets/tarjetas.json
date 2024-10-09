@@ -1,16 +1,16 @@
 [
     {
-        "nombre_titular": "Martina",
-        "apellido_titular": "Gonzalez",
-        "numero_tarjeta": 4532148803436467,
+        "nombre_titular": "MARTINA GONZALES",
+        "numero": 4532148803436467,
         "fecha_vencimiento": "2025-12-31",
-        "cvv": "120"
+        "cvv": "120",
+        "tipo": "Mastercard"
     },
     {
-        "nombre_titular": "Victor",
-        "apellido_titular": "Martinez",
-        "numero_tarjeta": 5105105105105100,
+        "nombre_titular": "VICTOR MARTINEZ",
+        "numero": 5105105105105100,
         "fecha_vencimiento": "2020-05-31",
-        "cvv": "498"
+        "cvv": "498",
+        "tipo": "Visa"
     }
 ]

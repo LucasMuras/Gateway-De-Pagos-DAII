@@ -2,7 +2,7 @@ from django.db import models
 
 # Create your models here.
 class Destinatario(models.Model):
-    idExterna = models.IntegerField()
+    id_externa = models.IntegerField()
     nombre = models.CharField(max_length=50)
     email = models.EmailField()
 

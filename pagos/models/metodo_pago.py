@@ -10,7 +10,7 @@ class MetodoPago(models.Model):
         (12, '12 Cuotas'),
     ]
     
-    enCuotas = models.BooleanField(default=False)
+    en_cuotas = models.BooleanField(default=False)
     tipo = models.CharField(max_length=20, default="Tarjeta") #unica opción de la versión "tarjeta"
     cuotas = models.IntegerField(choices=OPCIONES_CUOTAS, null=True, blank=True)
     tarjeta = models.ForeignKey('Tarjeta', on_delete=models.SET_NULL, null=True)
