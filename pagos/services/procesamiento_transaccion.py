@@ -1,5 +1,5 @@
 import json
-from ..models import Pagador, Destinatario
+from ..models import Pagador, Destinatario, Transaccion
 
 def guardar_entidades(mensaje):
     # Convertir el mensaje a un diccionario (asumiendo JSON)
@@ -19,6 +19,19 @@ def guardar_entidades(mensaje):
         nombre=data['destinatario']['nombre'],
         email=data['destinatario']['email'],
     )
+
+    transaccion_semi = Transaccion.objects.create(
+        pagador = pagador,
+        destinatario = destinatario,
+        monto = data['monto'],
+        descripcion = None,
+        metodo_pago = None,
+        fecha = None,
+        estado = 'pendiente',
+        es_reembolso = False
+    )
+
+
 
     print("Reserva recibida:")
     print(f"Pagador: {pagador.nombre} {pagador.apellido}")

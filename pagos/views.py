@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from .forms import PagoForm
 from .rabbitmq import escuchar_topicos
 import threading
-from .models import Pagador, Destinatario, Tarjeta, MetodoPago
+from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
 
 from django.http import JsonResponse
 from .productor import enviar_reserva
@@ -21,6 +21,7 @@ def pago(request):
     # Obtenemos al pagador y destinario que estan en el momento para hacer la transaccion
     pagador = Pagador.objects.last()
     destinatario = Destinatario.objects.last()
+    transaccion_semi = Transaccion.objects.last()
 
     if pagador is None or destinatario is None:
         return render(request, 'pagos/pago.html', {'error': 'No se encontró ninguna reserva.'})
@@ -65,7 +66,7 @@ def pago(request):
             print("invalido")
             form = PagoForm()
     form =  PagoForm(request.POST)
-    return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario})
+    return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion_semi':transaccion_semi})
 
 @csrf_exempt
 def crear_reserva(request):
