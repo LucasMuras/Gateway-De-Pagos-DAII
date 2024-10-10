@@ -12,7 +12,7 @@
     {% if reserva %}
         <p>Pagador: {{ reserva.nombre }}</p>
         <p>Destinatario: {{ destinatario.nombre }}</p>
-        <h3>Monto: {{ transaccion_semi.monto }} </h3>
+        <h3>Monto: {{ transaccion.monto }} </h3>
     {% else %}
         <p>No se han encontrado datos de reserva.</p>
     {% endif %}

@@ -3,6 +3,7 @@ from .forms import PagoForm
 from .rabbitmq import escuchar_topicos
 import threading
 from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
+from .services.procesamiento_transaccion import iniciar_transaccion
 
 from django.http import JsonResponse
 from .productor import enviar_reserva
@@ -21,7 +22,8 @@ def pago(request):
     # Obtenemos al pagador y destinario que estan en el momento para hacer la transaccion
     pagador = Pagador.objects.last()
     destinatario = Destinatario.objects.last()
-    transaccion_semi = Transaccion.objects.last()
+    transaccion = Transaccion.objects.last()
+    print(transaccion)
 
     if pagador is None or destinatario is None:
         return render(request, 'pagos/pago.html', {'error': 'No se encontró ninguna reserva.'})
@@ -41,7 +43,7 @@ def pago(request):
             tipo_tarjeta = form.cleaned_data['tipo_tarjeta']
 
             tarjeta = Tarjeta.objects.create(
-                nombre_titular = pagador.nombre,
+                nombre_titular = (pagador.nombre + " " + pagador.apellido).upper(),
                 numero = numero,
                 fecha_vencimiento = fecha_vencimiento,
                 cvv = cvv,
@@ -55,35 +57,49 @@ def pago(request):
                 tarjeta = tarjeta,
             )
 
+            # hacer transaccion completa
+            transaccion.descripcion = "Transaccion Iniciada"
+            transaccion.metodo_pago = metodo_pago
+            transaccion.estado = 'iniciado'
+            transaccion.save()
+
+
             print(pagador.nombre)
             print(en_cuotas)
             print(numero)
+
+            # procesar pago
+            transaccion_completa_exitosa = iniciar_transaccion(transaccion)
+            print(transaccion_completa_exitosa)
+            if (transaccion_completa_exitosa == True):
+                return render(request, 'pagos/pago_exitoso.html')
+            else:
+                return render(request, 'pagos/pago_fallido.html')
             
-            return render(request, 'pagos/pago_exito.html')
         
         else:
             form = PagoForm(request.POST)
             print("invalido")
             form = PagoForm()
     form =  PagoForm(request.POST)
-    return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion_semi':transaccion_semi})
+    return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion':transaccion})
 
 @csrf_exempt
 def crear_reserva(request):
     if request.method == 'POST':
         # Datos hardcodeados para el pagador y destinatario
         pagador = Pagador(
-            id_externa=12345,
-            nombre="Vicente",
-            apellido="Vainilla",
-            dni=12345678,
-            email="mar.gon@example.com",
+            id_externa=1,
+            nombre="Rodrigo",
+            apellido="Nutriales",
+            dni=88447755,
+            email="rod.nut@example.com",
         )
         
         destinatario = Destinatario(
-            id_externa=54321,
-            nombre="Tienda LOL",
-            email="xyz@gmail.com"
+            id_externa=1,
+            nombre="Tienda Merequetengue",
+            email="m@gmail.com"
         )
 
         # Suponiendo que el monto es enviado desde el formulario

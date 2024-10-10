@@ -1,4 +1,5 @@
 import pika
+from .services.procesamiento_transaccion import guardar_entidades
 
 # funcion que se encarga de conectar a RabbitMQ a los tópicos reserva y backoffice (para hacer la simulacion)
 def conectar_rabbitmq():
@@ -16,6 +17,7 @@ def callback_reserva(ch, method, properties, body):
     # Vamos validando que llegan ciertos eventos que nos interesan del tópico de reserva
     if method.routing_key == 'reservaIniciada':
         print(f"Reserva iniciada: {mensaje}")
+        guardar_entidades(mensaje)
     elif method.routing_key == 'reservaCancelada':
         print(f"Reserva cancelada: {mensaje}")
     else:
@@ -24,10 +26,12 @@ def callback_reserva(ch, method, properties, body):
 # función que se encarga de escuchar los eventos de backoffice que se guardaron en nuestra cola backoffice_queue
 def callback_backoffice(ch, method, properties, body):
     mensaje = body.decode()
+    print(mensaje)
+
 
     # Vamos validando que llegan ciertos eventos que nos interesan del tópico de backoffice
     if method.routing_key == 'reservaCancelada':
-        print(f"Reserva iniciada: {mensaje}")
+        print(f"Reserva cancelada: {mensaje}")
     else:
         print(f"Evento no manejado: {mensaje}")
 

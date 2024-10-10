@@ -8,7 +8,7 @@ def enviar_reserva(pagador, destinatario, monto):
     channel = connection.channel()
 
     # Declarar el intercambio (exchange) y la cola (queue)
-    channel.exchange_declare(exchange='reservas', exchange_type='topic')
+    channel.exchange_declare(exchange='reserva', exchange_type='topic')
 
     # Crear el mensaje
     reserva_data = {
@@ -29,8 +29,8 @@ def enviar_reserva(pagador, destinatario, monto):
 
     # Enviar el mensaje
     channel.basic_publish(
-        exchange='reservas',
-        routing_key='reserva.iniciada',
+        exchange='reserva',
+        routing_key='reservaIniciada',
         body=json.dumps(reserva_data)
     )
 

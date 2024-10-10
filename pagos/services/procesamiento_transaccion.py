@@ -1,5 +1,6 @@
-import json
+import json, os
 from ..models import Pagador, Destinatario, Transaccion
+from . import validaciones
 
 def guardar_entidades(mensaje):
     # Convertir el mensaje a un diccionario (asumiendo JSON)
@@ -20,7 +21,7 @@ def guardar_entidades(mensaje):
         email=data['destinatario']['email'],
     )
 
-    transaccion_semi = Transaccion.objects.create(
+    transaccion = Transaccion.objects.create(
         pagador = pagador,
         destinatario = destinatario,
         monto = data['monto'],
@@ -41,6 +42,50 @@ def guardar_entidades(mensaje):
     # No se redirige en este caso, ya que estamos en el contexto de un consumidor
 
 
-def iniciar_transaccion():
-    return
+def iniciar_transaccion(transaccion):
+
+    tarjeta = transaccion.metodo_pago.tarjeta
+    
+    ruta_tarjetas_json = os.path.join(
+        os.path.dirname(__file__), '..', 'assets', 'tarjetas.json'
+    )
+
+    with open(ruta_tarjetas_json, 'r') as archivo:
+        tarjetas_json = json.load(archivo)
+
+    tarjeta_existente = {}
+    for tarjeta_json in tarjetas_json:
+        if int(tarjeta.numero) == tarjeta_json['numero']:
+            print("Tarjeta encontrada")
+            tarjeta_existente = tarjeta_json
+            break
+        else:
+            print("Tarjeta no encontrada")
+            return False
+
+
+    # Validacion de tarjeta
+    validacion_vencimiento = validaciones.validar_vencimiento(tarjeta_existente)
+    validacion_estado = validaciones.validar_estado(tarjeta_existente)
+
+    if (validacion_vencimiento == False or validacion_estado == False):
+        print("Tarjeta invalida")
+        transaccion.estado = 'fallido'
+        return False
+
+
+    # Validacion de saldo suficiente
+    monto = transaccion.monto
+    validacion_monto = validaciones.validar_monto(tarjeta_existente, monto)
+
+    if (validacion_monto == False):
+        print("El saldo actual de su tarjeta es insuficiente")
+        transaccion.estado = 'fallido'
+        return False
+    else:
+        print("Transaccion exitosa")
+        transaccion.estado = 'valido'
+        transaccion.save()
+        return True
+
 

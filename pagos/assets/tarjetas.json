@@ -1,16 +1,19 @@
 [
     {
+        "nombre_titular": "RODRIGO NUTRIALES",
+        "numero": 1234567890000000,
+        "fecha_vencimiento": "2025-09-11",
+        "cvv": "123",
+        "estado": "activa",
+        "tipo": "Visa",
+        "saldo": 50
+    },
+    {
         "nombre_titular": "MARTINA GONZALES",
         "numero": 4532148803436467,
         "fecha_vencimiento": "2025-12-31",
         "cvv": "120",
-        "tipo": "Mastercard"
-    },
-    {
-        "nombre_titular": "VICTOR MARTINEZ",
-        "numero": 5105105105105100,
-        "fecha_vencimiento": "2020-05-31",
-        "cvv": "498",
-        "tipo": "Visa"
+        "tipo": "Mastercard",
+        "saldo": 1000
     }
 ]
