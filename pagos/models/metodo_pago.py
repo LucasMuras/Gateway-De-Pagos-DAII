@@ -16,4 +16,4 @@ class MetodoPago(models.Model):
     tarjeta = models.ForeignKey('Tarjeta', on_delete=models.SET_NULL, null=True)
 
     def __str__(self):
-        return f'{self.usuario.username} - {self.tipo}'
+        return f'{self.tipo}'

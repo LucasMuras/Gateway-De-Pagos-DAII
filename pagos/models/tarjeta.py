@@ -13,4 +13,4 @@ class Tarjeta(models.Model):
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
 
     def __str__(self):
-        return f'{self.nombre} - {self.tipo}'
+        return f'{self.nombre_titular} - {self.tipo}'
