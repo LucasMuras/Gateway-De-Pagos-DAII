@@ -64,7 +64,6 @@ def iniciar_transaccion(transaccion):
             transaccion.estado = 'fallido'
             return False
 
-
     # Validacion de tarjeta
     validacion_vencimiento = validaciones.validar_vencimiento(tarjeta_existente)
     validacion_estado = validaciones.validar_estado(tarjeta_existente)
@@ -74,21 +73,29 @@ def iniciar_transaccion(transaccion):
         transaccion.estado = 'fallido'
         return False
 
+    print(transaccion.metodo_pago.en_cuotas)
+    # Verifico si eligió cuotas o en un pago unico
+    if (transaccion.metodo_pago.en_cuotas == True):
+        monto = round(transaccion.monto / transaccion.metodo_pago.cuotas, 2)
+        print(monto)
+    else:
+        monto = transaccion.monto
 
-    # Validacion de saldo suficiente
-    monto = transaccion.monto
+    # Validacion de saldo suficiente para abonar
     validacion_monto = validaciones.validar_monto(tarjeta_existente, monto)
 
     if (validacion_monto == False):
         print("El saldo actual de su tarjeta es insuficiente")
         transaccion.estado = 'fallido'
+        transaccion.descripcion = "Transaccion fallida"
         return False
     else:
-        tarjeta_existente['saldo'] = float(tarjeta_existente['saldo']) - float(monto)
+        tarjeta_existente['saldo'] = round(float(tarjeta_existente['saldo']) - float(monto), 2)
         with open(ruta_tarjetas_json, 'w') as archivo:
-            json.dump(tarjetas_json, archivo, indent=4)  # Guardar con formato
+            json.dump(tarjetas_json, archivo, indent=4)
         print("Transaccion exitosa")
         transaccion.estado = 'valido'
+        transaccion.descripcion = "Transaccion exitosa"
         transaccion.save()
         return True
 

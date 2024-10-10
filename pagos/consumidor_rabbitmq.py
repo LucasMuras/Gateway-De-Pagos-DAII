@@ -72,6 +72,6 @@ def escuchar_topicos():
     channel.start_consuming()
 
 
-# para ejecutar este módulo, se debe ejecutar el siguiente comando en la terminal: python -m pagos.rabbitmq
+# para ejecutar este módulo, se debe ejecutar el siguiente comando en la terminal: python -m pagos.comsumidor_rabbitmq
 if __name__ == '__main__':
     escuchar_topicos()

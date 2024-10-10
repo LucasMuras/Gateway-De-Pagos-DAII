@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect
 from .forms import PagoForm
-from .rabbitmq import escuchar_topicos
+from .consumidor_rabbitmq import escuchar_topicos
 import threading
 from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
 from .services.procesamiento_transaccion import iniciar_transaccion
+from .publicador_rabbitmq import enviar_evento_transaccion
 
 from django.http import JsonResponse
 from .productor import enviar_reserva
@@ -71,6 +72,9 @@ def pago(request):
             # procesar pago
             transaccion_completa_exitosa = iniciar_transaccion(transaccion)
             print(transaccion_completa_exitosa)
+
+            enviar_evento_transaccion(transaccion)
+
             if (transaccion_completa_exitosa == True):
                 return render(request, 'pagos/pago_exitoso.html')
             else:
