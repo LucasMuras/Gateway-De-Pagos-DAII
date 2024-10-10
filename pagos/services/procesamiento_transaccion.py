@@ -61,6 +61,7 @@ def iniciar_transaccion(transaccion):
             break
         else:
             print("Tarjeta no encontrada")
+            transaccion.estado = 'fallido'
             return False
 
 
@@ -83,6 +84,9 @@ def iniciar_transaccion(transaccion):
         transaccion.estado = 'fallido'
         return False
     else:
+        tarjeta_existente['saldo'] = float(tarjeta_existente['saldo']) - float(monto)
+        with open(ruta_tarjetas_json, 'w') as archivo:
+            json.dump(tarjetas_json, archivo, indent=4)  # Guardar con formato
         print("Transaccion exitosa")
         transaccion.estado = 'valido'
         transaccion.save()

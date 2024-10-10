@@ -22,7 +22,11 @@ def validar_estado(tarjeta_existente):
  # Ejecutar si la tarjeta es válida
  # Validar si hay saldo suficiente para abonar el monto
 def validar_monto(tarjeta_existente, monto):
-    if (tarjeta_existente['saldo'] < monto):
-        return (False, "Saldo insuficiente")
+    print(type(monto))
+    print(float(tarjeta_existente['saldo']), float(monto))
+    print("adda", float(tarjeta_existente['saldo']) < float(monto))
+    if (float(tarjeta_existente['saldo']) < float(monto)):
+        print("holaa")
+        return False
     else:
-        return(True, "Saldo suficiente")
+        return True

@@ -1,5 +1,10 @@
-import pika
+import pika, os, django
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gateway_de_pagos.settings')  # Reemplaza con el nombre de tu proyecto
+django.setup()
+
 from .services.procesamiento_transaccion import guardar_entidades
+
 
 # funcion que se encarga de conectar a RabbitMQ a los tópicos reserva y backoffice (para hacer la simulacion)
 def conectar_rabbitmq():
