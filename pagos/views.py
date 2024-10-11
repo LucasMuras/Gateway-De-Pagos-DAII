@@ -5,6 +5,10 @@ import threading
 from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
 from .services.procesamiento_transaccion import iniciar_transaccion
 from .publicador_rabbitmq import enviar_evento_transaccion
+import json
+from .consumidor_rabbitmq import recibir_mensajes_sns
+from .utils.aws_utils import enviar_evento_reserva
+from .utils.utils import PagadorDic, DestinatarioDic
 
 from django.http import JsonResponse
 from .productor import enviar_reserva
@@ -18,6 +22,7 @@ def iniciar_escucha():
 # Inicia la escucha de RabbitMQ cuando arranca la aplicación
 threading.Thread(target=iniciar_escucha, daemon=True).start()
 
+@csrf_exempt
 def pago(request):
    
     # Obtenemos al pagador y destinario que estan en el momento para hacer la transaccion
@@ -73,7 +78,8 @@ def pago(request):
             transaccion_completa_exitosa = iniciar_transaccion(transaccion)
             print(transaccion_completa_exitosa)
 
-            enviar_evento_transaccion(transaccion)
+            #Aun no, ver bien el puerto, dice 3000 deberia ser 8000
+            #enviar_evento_transaccion(transaccion)
 
             if (transaccion_completa_exitosa == True):
                 return render(request, 'pagos/pago_exitoso.html')
@@ -88,11 +94,40 @@ def pago(request):
     form =  PagoForm(request.POST)
     return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion':transaccion})
 
+
+# Se verifica la firma (estar conectado/suscripto al SNS) si sí se procesa el evento
+@csrf_exempt
+def sns_webhook(request):
+    if request.method == 'POST':
+        try:
+            body = json.loads(request.body.decode('utf-8'))
+            message_type = body.get('Type')
+            if message_type == 'SubscriptionConfirmation':
+                token = body.get('Token')
+                subscribe_url = body.get('SubscribeURL')
+                #return JsonResponse({'subscribe_url': subscribe_url})
+                if token and subscribe_url:
+                    print({'subscribe_url': subscribe_url, 'token': token})
+                    # Deberías hacer una solicitud HTTP al `SubscribeURL` con el `Token` para confirmar la suscripción.
+                    return JsonResponse({'subscribe_url': subscribe_url, 'token': token})
+                else:
+                    return JsonResponse({'error': 'Faltan parámetros para confirmar la suscripción'}, status=400)
+            elif message_type == 'Notification':
+                print('holaa')
+                event = json.loads(request.body)
+                print(event)
+                recibir_mensajes_sns(event)
+                return JsonResponse({'mensaje': 'Evento procesado'}, status=200)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Cuerpo de solicitud no es JSON'}, status=400)
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
 @csrf_exempt
 def crear_reserva(request):
     if request.method == 'POST':
         # Datos hardcodeados para el pagador y destinatario
-        pagador = Pagador(
+        pagador = PagadorDic(
             id_externa=1,
             nombre="Rodrigo",
             apellido="Nutriales",
@@ -100,7 +135,7 @@ def crear_reserva(request):
             email="rod.nut@example.com",
         )
         
-        destinatario = Destinatario(
+        destinatario = DestinatarioDic(
             id_externa=1,
             nombre="Tienda Merequetengue",
             email="m@gmail.com"
@@ -109,8 +144,8 @@ def crear_reserva(request):
         # Suponiendo que el monto es enviado desde el formulario
         monto = float(request.POST.get('monto', 100.00))  # Valor por defecto si no se proporciona
 
-        # Enviar la reserva utilizando los objetos
-        enviar_reserva(pagador, destinatario, monto)
+        # Enviar el evento al tópico SNS
+        response = enviar_evento_reserva(pagador.to_dict(), destinatario.to_dict(), monto)
 
         return JsonResponse({'mensaje': 'Reserva enviada'})
 

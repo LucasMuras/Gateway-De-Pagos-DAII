@@ -130,3 +130,11 @@ RABBITMQ_HOST = 'localhost'
 RABBITMQ_PORT = 5672
 RABBITMQ_USER = 'guest'
 RABBITMQ_PASSWORD = 'guest'
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '1b51-190-174-53-177.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
+    # Puedes agregar más dominios si es necesario
+]
+

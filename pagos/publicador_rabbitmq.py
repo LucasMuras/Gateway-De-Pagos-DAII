@@ -2,6 +2,8 @@ import pika, json
 from django.conf import settings
 import requests
 
+#NO USARLO AUN
+
 # Debe ser un endopint de Django que se encargue de enviar el evento de transacción al EDA
 def enviar_evento_transaccion(transaccion):
     #connection = pika.BlockingConnection(pika.ConnectionParameters(host=settings.RABBITMQ_HOST))

@@ -1,4 +1,4 @@
-import pika, os, django
+import pika, os, django, json
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gateway_de_pagos.settings')  # Reemplaza con el nombre de tu proyecto
 django.setup()
@@ -13,6 +13,31 @@ def conectar_rabbitmq():
     channel.exchange_declare(exchange='reserva', exchange_type='topic')
     channel.exchange_declare(exchange='backoffice', exchange_type='topic')
     return connection, channel
+
+
+def enviar_mensaje_a_rabbitmq(message, exchange, routing_key):
+    message = json.dumps(message)
+    #print('toy en rabbit', message)
+    connection, channel = conectar_rabbitmq()
+    channel.basic_publish(exchange=exchange, routing_key=routing_key, body=message)
+    #print(f" [x] Sent '{message}'")
+    connection.close()
+
+
+def recibir_mensajes_sns(event):
+    if 'Message' in event:
+        sns_message = json.loads(event['Message'])
+        sns_topic = event.get('TopicArn', '')
+        sns_event_type = event.get('Subject', '')
+        print("hola", sns_event_type)
+
+        if 'reserva' in sns_topic:
+            enviar_mensaje_a_rabbitmq(sns_message, 'reserva', sns_event_type)
+        elif 'backoffice' in sns_topic:
+            enviar_mensaje_a_rabbitmq(sns_message, 'backoffice', sns_event_type)
+    else:
+        print("El evento SNS no contiene un campo 'Message'")
+
 
 
 # función que se encarga de escuchar los eventos de reservas que se guardaron en nuestra cola reserva_queue
@@ -54,7 +79,7 @@ def escuchar_topicos():
     channel.queue_bind(exchange='reserva', queue='reserva_queue', routing_key='reservaCancelada')
 
     # Nos suscribimos a nuestra cola de reserva y manejamos los eventos/mensajes que lleguen con el callback_reserva
-    channel.basic_consume(queue='reserva_queue', on_message_callback=callback_reserva, auto_ack=True)
+    channel.basic_consume(queue='reserva_queue', on_message_callback=callback_reserva, auto_ack=False)
 
 
     #BACKOFFICE
@@ -72,6 +97,6 @@ def escuchar_topicos():
     channel.start_consuming()
 
 
-# para ejecutar este módulo, se debe ejecutar el siguiente comando en la terminal: python -m pagos.comsumidor_rabbitmq
+# para ejecutar este módulo, se debe ejecutar el siguiente comando en la terminal: python -m pagos.consumidor_rabbitmq
 if __name__ == '__main__':
     escuchar_topicos()
