@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -134,7 +135,12 @@ RABBITMQ_PASSWORD = 'guest'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '1b51-190-174-53-177.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
+    'bc63-190-174-53-211.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
     # Puedes agregar más dominios si es necesario
 ]
 
+# Configuración de AWS
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
+AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')

@@ -6,7 +6,7 @@
         "cvv": "123",
         "estado": "activa",
         "tipo": "Visa",
-        "saldo": 50.01
+        "saldo": 50000.00
     },
     {
         "nombre_titular": "MARTINA GONZALES",
