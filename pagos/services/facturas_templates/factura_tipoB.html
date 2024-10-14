@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Factura</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        margin: 0;
+      }
+      .content {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+      header {
+        text-align: center;
+        background-color: blueviolet;
+        padding: 1px;
+      }
+      h2,
+      h3 {
+        text-align: center;
+      }
+      .detalles {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      table {
+        width: 100%;
+      }
+      table th,
+      table td {
+        border: 1px solid black;
+        padding: 10px;
+      }
+      table td {
+        text-align: center;
+      }
+      .info-pago {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+      .contenedor-info {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+        margin-top: 20px;
+      }
+      p {
+        margin: 5px;
+      }
+      .total {
+        margin-top: 50px;
+        font-size: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Factura Tipo B</h1>
+    </header>
+
+    <div class="content">
+      <div>
+        <p>Cliente: {{ customer_name }}</p>
+        <p>DNI: {{ customer_dni }}</p>
+        <p>Fecha: {{ date }}</p>
+      </div>
+      <div>
+        <p>Realizado por: {{ destinatario }}</p>
+      </div>
+    </div>
+
+    <div class="contenedor-info">
+      <div class="info-pago">
+        <h2>Información de pago</h2>
+        <p>Medio de pago: {{ payment_method }}</p>
+        <p>Fecha de pago: {{ payment_date }}</p>
+        <p>Fecha de último pago por cuotas: {{fecha_ultima_cuota}}</p>
+      </div>
+      <div class="info-tarjeta">
+        <h2>Información de tarjeta</h2>
+        <p>Nombre: {{ card_name }}</p>
+        <p>Número: **** **** **** {{ card_ultimos_4_number }}</p>
+      </div>
+    </div>
+
+    <h2>Detalles</h2>
+    <div class="detalles">
+      <table>
+        <tr>
+          <th>Producto/Servicio</th>
+          <th>Precio</th>
+          <th>Cuotas</th>
+          <th>Total</th>
+        </tr>
+        <tr v-for="item in items">
+          <td>Reserva en el hotel {{delulu}}</td>
+          <td>{{ item.price }}</td>
+          <td>{{ item.cuotas }}</td>
+          <td>{{ item.total }}</td>
+        </tr>
+      </table>
+
+      <p class="total">Total: ${{ total }}</p>
+    </div>
+    <br />
+    <h3>Gracias por pagar con Belu Argentina Pagos Seguros</h3>
+  </body>
+</html>
