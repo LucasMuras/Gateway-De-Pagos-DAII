@@ -42,7 +42,7 @@ def pago(request):
             en_cuotas = form.cleaned_data['cuotas']
             tipo_metodo_pago = form.cleaned_data['tipo_metodo_pago']
             cantidad_cuotas = form.cleaned_data['cantidad_cuotas']
-
+            dni = form.cleaned_data['dni']
             numero = form.cleaned_data['numero_tarjeta']
             fecha_vencimiento = form.cleaned_data['fecha_vencimiento']
             cvv = form.cleaned_data['cvv']
@@ -50,6 +50,7 @@ def pago(request):
 
             tarjeta = Tarjeta.objects.create(
                 nombre_titular = (pagador.nombre + " " + pagador.apellido).upper(),
+                dni = dni,
                 numero = numero,
                 fecha_vencimiento = fecha_vencimiento,
                 cvv = cvv,

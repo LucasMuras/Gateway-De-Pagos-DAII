@@ -1,8 +1,6 @@
 # aws_utils.py
 
-#no usar aun
-
-import boto3, json, os
+import boto3, json
 from decouple import config
 
 # Configuración de AWS
@@ -10,7 +8,7 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
 AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')
-
+print(AWS_SESSION_TOKEN)
 
 def enviar_evento_reserva(pagador, destinatario, monto):
     sns_client = boto3.client(

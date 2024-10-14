@@ -7,6 +7,7 @@ class Tarjeta(models.Model):
     ]
 
     nombre_titular = models.CharField(max_length=255)
+    dni = models.CharField(max_length=8)
     numero = models.CharField(max_length=16)
     fecha_vencimiento = models.DateField()
     cvv = models.CharField(max_length=3)
