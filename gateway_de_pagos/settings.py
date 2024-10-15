@@ -56,7 +56,7 @@ ROOT_URLCONF = 'gateway_de_pagos.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates/pagos'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,3 +144,14 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
 AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')
+
+
+# Configuracion de email
+# Configuración del servidor SMTP de Gmail
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST='smtp.googlemail.com'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Tu dirección de correo
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Contraseña de tu cuenta de Gmail
+#DEFAULT_FROM_EMAIL = config('EMAIL_HOST_USER') # Dirección por defecto del remitente

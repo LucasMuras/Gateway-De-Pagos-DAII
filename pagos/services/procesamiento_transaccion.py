@@ -1,6 +1,6 @@
 import json, os
 from ..models import Pagador, Destinatario, Transaccion
-from . import validaciones
+from . import validaciones, facturas
 
 def guardar_entidades(mensaje):
     # Convertir el mensaje a un diccionario (asumiendo JSON)
@@ -98,5 +98,19 @@ def iniciar_transaccion(transaccion):
             transaccion.estado = 'valido'
             transaccion.descripcion = "Transaccion exitosa"
             transaccion.save()
+
+            #Evento transaccion exitosa
+
+            # Generar y enviar facturas
+            factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
+            factura_tipo_B = facturas.generar_factura_tipo_A('pagos/factura_tipo_B.html', transaccion)
+
+            mail_pagador = transaccion.pagador.email
+            mail_destinatario = transaccion.destinatario.email
+            facturas.enviar_pdf_por_email_pagador(factura_tipo_B, mail_pagador)
+            facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
+
+            #Evento facturas enviadas
+
             return True
     
