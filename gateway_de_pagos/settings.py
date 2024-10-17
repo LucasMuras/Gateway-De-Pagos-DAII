@@ -135,7 +135,7 @@ RABBITMQ_PASSWORD = 'guest'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '42e6-190-174-48-157.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
+    '62c5-190-174-62-52.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
     # Puedes agregar más dominios si es necesario
 ]
 
@@ -144,6 +144,10 @@ AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
 AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')
+
+TOPIC_ARN_RESERVA = config('TOPIC_ARN_RESERVA')
+TOPIC_ARN_GATEWAYDEPAGOS = config('TOPIC_ARN_GATEWAYDEPAGOS')
+TOPIC_ARN_BACKOFFICE = config('TOPIC_ARN_BACKOFFICE')
 
 
 # Configuracion de email

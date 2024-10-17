@@ -1,8 +1,4 @@
-import pika, os, django, json
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gateway_de_pagos.settings')  # Reemplaza con el nombre de tu proyecto
-django.setup()
-
+import pika, json
 from .services.procesamiento_transaccion import guardar_entidades
 
 
@@ -25,6 +21,7 @@ def enviar_mensaje_a_rabbitmq(message, exchange, routing_key):
 
 
 def recibir_mensajes_sns(event):
+    #print('AEAEAEEAEAEAEAEEAEAEAE')
     if 'Message' in event:
         sns_message = json.loads(event['Message'])
         sns_topic = event.get('TopicArn', '')
@@ -32,6 +29,7 @@ def recibir_mensajes_sns(event):
         print("hola", sns_event_type)
 
         if 'reserva' in sns_topic:
+            print('akdkjadhAAAAAAAAHHHHHHHHHHH')
             enviar_mensaje_a_rabbitmq(sns_message, 'reserva', sns_event_type)
         elif 'backoffice' in sns_topic:
             enviar_mensaje_a_rabbitmq(sns_message, 'backoffice', sns_event_type)
@@ -44,19 +42,28 @@ def recibir_mensajes_sns(event):
 def callback_reserva(ch, method, properties, body):
     mensaje = body.decode()
 
-    # Vamos validando que llegan ciertos eventos que nos interesan del tópico de reserva
-    if method.routing_key == 'reservaIniciada':
-        print(f"Reserva iniciada: {mensaje}")
-        guardar_entidades(mensaje)
-    elif method.routing_key == 'reservaCancelada':
-        print(f"Reserva cancelada: {mensaje}")
-    else:
-        print(f"Evento no manejado: {mensaje}")
+    try:
+        if method.routing_key == 'reservaIniciada':
+            print(f"Reserva iniciada: {mensaje}")
+            guardar_entidades(mensaje)
+        elif method.routing_key == 'reservaCancelada':
+            print(f"Reserva cancelada: {mensaje}")
+        else:
+            print(f"Evento no manejado: {mensaje}")
+        
+        # Confirma el mensaje solo si se procesó correctamente
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+    except Exception as e:
+        print(f"Error procesando el mensaje: {e}")
+        # Puedes optar por no enviar el ack aquí para que RabbitMQ reintente el mensaje
+        # Si deseas manejar el error sin reintentos, puedes hacer basic_nack
+        ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)  # Reencola el mensaje si lo deseas
 
 # función que se encarga de escuchar los eventos de backoffice que se guardaron en nuestra cola backoffice_queue
 def callback_backoffice(ch, method, properties, body):
     mensaje = body.decode()
     print(mensaje)
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
     # Vamos validando que llegan ciertos eventos que nos interesan del tópico de backoffice
@@ -69,6 +76,7 @@ def callback_backoffice(ch, method, properties, body):
 # función que se encarga de escuchar los tópicos de reserva y backoffice
 def escuchar_topicos():
     connection, channel = conectar_rabbitmq()
+    #print('BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB')
 
     #RESERVA
     # Declaramos la cola de reserva y la vinculamos al tópico de reserva
@@ -90,13 +98,20 @@ def escuchar_topicos():
     channel.queue_bind(exchange='backoffice', queue='backoffice_queue', routing_key='reservaCancelada')
 
     # Nos suscribimos a nuestra cola de backoffice y manejamos los eventos/mensajes que lleguen con el callback_backoffice
-    channel.basic_consume(queue='backoffice_queue', on_message_callback=callback_backoffice, auto_ack=True)
+    channel.basic_consume(queue='backoffice_queue', on_message_callback=callback_backoffice, auto_ack=False)
 
 
-    print('Esperando mensajes. Para salir presiona CTRL+C')
-    channel.start_consuming()
+    try:
+        print("Esperando mensajes...")
+        channel.start_consuming()
+    except Exception as e:
+        print(f"Error en la conexión: {e}")
+    finally:
+        if channel.is_open:
+            channel.close()
+        connection.close()
 
-
+ 
 # para ejecutar este módulo, se debe ejecutar el siguiente comando en la terminal: python -m pagos.consumidor_rabbitmq
-if __name__ == '__main__':
-    escuchar_topicos()
+#if __name__ == '__main__':
+#    escuchar_topicos()

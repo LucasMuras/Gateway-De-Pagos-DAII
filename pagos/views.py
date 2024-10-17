@@ -1,28 +1,25 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from .forms import PagoForm
-from .consumidor_rabbitmq import escuchar_topicos
-import threading
 from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
 from .services.procesamiento_transaccion import iniciar_transaccion
-from .publicador_rabbitmq import enviar_evento_transaccion
-import json
+import json, requests
 from .consumidor_rabbitmq import recibir_mensajes_sns
-from .utils.aws_utils import enviar_evento_reserva
 from .utils.utils import PagadorDic, DestinatarioDic
-
 from django.http import JsonResponse
-from .productor import enviar_reserva
 from django.views.decorators.csrf import csrf_exempt
+from .utils.libreria_sns_client import publish_to_topic, init_sns_client  # Asegúrate de importar tus funciones
+from decouple import config
+
  
  
-def iniciar_escucha():
-    """Inicia la escucha de RabbitMQ en un hilo separado."""
-    escuchar_topicos()
+#def iniciar_escucha():
+#    """Inicia la escucha de RabbitMQ en un hilo separado."""
+#    escuchar_topicos()
 
 # Inicia la escucha de RabbitMQ cuando arranca la aplicación
-threading.Thread(target=iniciar_escucha, daemon=True).start()
+#threading.Thread(target=iniciar_escucha, daemon=True).start()
 
-@csrf_exempt
+@csrf_exempt 
 def pago(request):
    
     # Obtenemos al pagador y destinario que estan en el momento para hacer la transaccion
@@ -31,7 +28,7 @@ def pago(request):
     transaccion = Transaccion.objects.last()
     print(transaccion)
 
-    if pagador is None or destinatario is None:
+    if pagador is None or destinatario is None: 
         return render(request, 'pagos/pago.html', {'error': 'No se encontró ninguna reserva.'})
 
     if request.method == 'POST':
@@ -108,9 +105,15 @@ def sns_webhook(request):
                 subscribe_url = body.get('SubscribeURL')
                 #return JsonResponse({'subscribe_url': subscribe_url})
                 if token and subscribe_url:
-                    print({'subscribe_url': subscribe_url, 'token': token})
-                    # Deberías hacer una solicitud HTTP al `SubscribeURL` con el `Token` para confirmar la suscripción.
-                    return JsonResponse({'subscribe_url': subscribe_url, 'token': token})
+                    #print({'subscribe_url': subscribe_url, 'token': token})
+                    response = requests.get(subscribe_url)
+
+                    if (response.status_code == 200):
+                         print('Suscripción confirmada')
+                         return JsonResponse({'status': 'Suscripción confirmada'})
+                    else:
+                        print('Suscripción no confirmada')
+                        return JsonResponse({'error': 'No se pudo confirmar la suscripción'})
                 else:
                     return JsonResponse({'error': 'Faltan parámetros para confirmar la suscripción'}, status=400)
             elif message_type == 'Notification':
@@ -124,6 +127,7 @@ def sns_webhook(request):
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
+# Simulacion reserva creada/iniciada
 @csrf_exempt
 def crear_reserva(request):
     if request.method == 'POST':
@@ -145,8 +149,21 @@ def crear_reserva(request):
         # Suponiendo que el monto es enviado desde el formulario
         monto = float(request.POST.get('monto', 100.00))  # Valor por defecto si no se proporciona
 
+        cuerpo_mensaje = {
+            'pagador': pagador.to_dict(),
+            'destinatario': destinatario.to_dict(),
+            'monto': monto
+        }
+
+        # Credenciales de AWS SNS
+        AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+        AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
+        AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')
+
+        sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
         # Enviar el evento al tópico SNS
-        response = enviar_evento_reserva(pagador.to_dict(), destinatario.to_dict(), monto)
+        publish_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'reservaIniciada', cuerpo_mensaje)
 
         return JsonResponse({'mensaje': 'Reserva enviada'})
 
