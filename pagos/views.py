@@ -10,14 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .utils.libreria_sns_client import publish_to_topic, init_sns_client  # Asegúrate de importar tus funciones
 from decouple import config
 
- 
- 
-#def iniciar_escucha():
-#    """Inicia la escucha de RabbitMQ en un hilo separado."""
-#    escuchar_topicos()
 
-# Inicia la escucha de RabbitMQ cuando arranca la aplicación
-#threading.Thread(target=iniciar_escucha, daemon=True).start()
 
 @csrf_exempt 
 def pago(request):
@@ -166,5 +159,49 @@ def crear_reserva(request):
         publish_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'reservaIniciada', cuerpo_mensaje)
 
         return JsonResponse({'mensaje': 'Reserva enviada'})
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+
+# Simulacion reembolso
+@csrf_exempt
+def reembolso(request):
+    if request.method == 'POST':
+        # Datos hardcodeados para el pagador y destinatario
+        pagador = PagadorDic(
+            id_externa=1,
+            nombre="Rodrigo",
+            apellido="Nutriales",
+            dni=88447755,
+            email="rod.nut@example.com",
+        )
+        
+        destinatario = DestinatarioDic(
+            id_externa=1,
+            nombre="Tienda Merequetengue",
+            email="m@gmail.com"
+        )
+
+        # Suponiendo que el monto es enviado desde el formulario
+        monto = float(request.POST.get('monto', 100.00))  # Valor por defecto si no se proporciona
+
+        cuerpo_mensaje = {
+            'pagador': pagador.to_dict(),
+            'destinatario': destinatario.to_dict(),
+            'monto': monto,
+            'descripcion': 'Reembolso por cancelación de reserva'
+        }
+
+        # Credenciales de AWS SNS
+        AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+        AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
+        AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION', default='us-east-1')
+
+        sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
+        # Enviar el evento al tópico SNS
+        publish_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'reservaCancelada', cuerpo_mensaje)
+
+        return JsonResponse({'mensaje': 'Reembolso enviado'})
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)

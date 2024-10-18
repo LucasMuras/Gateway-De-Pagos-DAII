@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Note</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .credit-note-container {
+            border: 2px solid #d33;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #d33;
+            padding-bottom: 10px;
+        }
+        .header h1 {
+            color: #d33;
+            margin: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .totals {
+            text-align: right;
+        }
+        .totals table {
+            width: 300px;
+            margin-left: auto;
+        }
+        .total {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #d33;
+        }
+        .notes {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="credit-note-container">
+        <div class="header">
+            <h1>Nota de Crédito</h1>
+            <p>Fecha: {{fecha_hoy}}</p>
+        </div>
+
+        <table>
+            <tr>
+                <th>Detalles de compañía</th>
+                <th>Detalles del cliente</th>
+            </tr>
+            <tr>
+                <td>
+                    {{nombre_destinatario}}<br>
+                    {{email_destinatario}}<br>
+                </td>
+                <td>
+                    {{nombre_pagador}}<br>
+                </td>
+            </tr>
+        </table>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Descripcion</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Reserva en Hotel {{nombre_destinatario}}</td>
+                    <td>{{monto}}</td>
+                    <td>{{monto}}</td>
+                </tr>
+                <!-- Add more rows as needed -->
+            </tbody>
+        </table>
+
+        <div class="totals">
+            <table>
+                <tr class="total">
+                    <td>Crédito Total:</td>
+                    <td>{{monto}}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="notes">
+            <h3>Razón por el Crédito</h3>
+            <p>{{descripcion}}</p>
+        </div>
+
+        <h3 class="total">Disculpamos las molestias. Belu Argentina Pagos Seguros</h3>
+    </div>
+</body>
+</html>

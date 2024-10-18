@@ -67,6 +67,25 @@ def generar_factura_tipo_A(template_src, transaccion):
         return result.getvalue()
     return None
 
+# Nota de credito para el cliente en caso de devolucion por cancelacion
+def generar_nota_credito(template_src, reembolso):
+    context_dict = {
+        'fecha_hoy': reembolso.fecha,
+        'nombre_destinatario': reembolso.destinatario.nombre,
+        'monto': reembolso.monto,
+        'nombre_pagador': reembolso.pagador.nombre,
+        'email_destinatario': reembolso.pagador.email,
+        'descripcion': reembolso.descripcion,
+    }
+    template = get_template(template_src)
+    html = template.render(context_dict)
+    result = BytesIO()
+    pdf = pisa.pisaDocument(BytesIO(html.encode("UTF-8")), result)
+    
+    if not pdf.err:
+        return result.getvalue()
+    return None
+
 
 # envio de facturas por email de cada participante
 # Ambas facturas al destinatario y la de tipo B solo al cliente
@@ -104,4 +123,18 @@ def enviar_pdf_por_email_destinatario(factura_tipo_A_pdf, factura_tipo_B_pdf, ma
         email.attach('factura_tipo_B.pdf', factura_tipo_B_pdf, 'application/pdf')
 
     # Enviar el correo
+    email.send()
+
+
+def enviar_nota_pdf_por_email_pagador(nota_pdf, mail_pagador):
+    email = EmailMessage(
+        'Tu nota de credito',
+        'Adjuntamos la nota de credito que has solicitado.',
+        config('EMAIL_HOST_USER'),
+        [mail_pagador],  
+    )
+
+    if nota_pdf:
+        email.attach('nota.pdf', nota_pdf, 'application/pdf')
+
     email.send()

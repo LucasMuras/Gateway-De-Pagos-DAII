@@ -18,8 +18,9 @@ class PagosConfig(AppConfig):
         
         sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
 
-        # Suscribirse a los tópicos de reserva, transacción y backoffice
-        subscribe_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'https', 'https://62c5-190-174-62-52.ngrok-free.app/pagos/sns-webhook/')
+        # Suscribirse a los tópicos de reserva y backoffice
+        subscribe_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'https', 'https://ce9e-190-174-52-206.ngrok-free.app/pagos/sns-webhook/')
+        subscribe_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'https', 'https://ce9e-190-174-52-206.ngrok-free.app/pagos/sns-webhook/')
 
         # Comprobar si el hilo ya está activo antes de iniciarlo
         if not hasattr(threading.current_thread(), 'escuchar_thread'):

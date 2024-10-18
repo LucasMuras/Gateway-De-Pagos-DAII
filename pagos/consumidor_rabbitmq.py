@@ -1,5 +1,5 @@
 import pika, json
-from .services.procesamiento_transaccion import guardar_entidades
+from .services.procesamiento_transaccion import guardar_entidades, iniciar_reembolso
 
 
 # funcion que se encarga de conectar a RabbitMQ a los tópicos reserva y backoffice (para hacer la simulacion)
@@ -45,9 +45,13 @@ def callback_reserva(ch, method, properties, body):
     try:
         if method.routing_key == 'reservaIniciada':
             print(f"Reserva iniciada: {mensaje}")
-            guardar_entidades(mensaje)
+            guardar_entidades(mensaje, 'transaccion')
+            #No inicio porque eso se hace en el pago (endpoint)
         elif method.routing_key == 'reservaCancelada':
             print(f"Reserva cancelada: {mensaje}")
+            reembolso = guardar_entidades(mensaje, 'reembolso')
+            iniciar_reembolso(reembolso)
+
         else:
             print(f"Evento no manejado: {mensaje}")
         
@@ -58,6 +62,7 @@ def callback_reserva(ch, method, properties, body):
         # Puedes optar por no enviar el ack aquí para que RabbitMQ reintente el mensaje
         # Si deseas manejar el error sin reintentos, puedes hacer basic_nack
         ch.basic_nack(delivery_tag=method.delivery_tag, requeue=True)  # Reencola el mensaje si lo deseas
+
 
 # función que se encarga de escuchar los eventos de backoffice que se guardaron en nuestra cola backoffice_queue
 def callback_backoffice(ch, method, properties, body):

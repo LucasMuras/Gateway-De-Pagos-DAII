@@ -1,8 +1,9 @@
 import json, os
-from ..models import Pagador, Destinatario, Transaccion
+from ..models import Pagador, Destinatario, Transaccion, Reembolso
 from . import validaciones, facturas
+from django.utils import timezone
 
-def guardar_entidades(mensaje):
+def guardar_entidades(mensaje, caso):
     # Convertir el mensaje a un diccionario (asumiendo JSON)
     data = json.loads(mensaje)
 
@@ -21,27 +22,31 @@ def guardar_entidades(mensaje):
         email=data['destinatario']['email'],
     )
 
-    transaccion = Transaccion.objects.create(
-        pagador = pagador,
-        destinatario = destinatario,
-        monto = data['monto'],
-        descripcion = None,
-        metodo_pago = None,
-        fecha = None,
-        estado = 'pendiente',
-        es_reembolso = False
-    )
-
-
-
-    print("Reserva recibida:")
-    print(f"Pagador: {pagador.nombre} {pagador.apellido}")
-    print(f"Email: {pagador.email}")
-    print(f"Destinatario: {destinatario.nombre}")
-
+    if (caso == 'transaccion'):
+        transaccion = Transaccion.objects.create(
+            pagador = pagador,
+            destinatario = destinatario,
+            monto = data['monto'],
+            descripcion = None,
+            metodo_pago = None,
+            fecha = None,
+            estado = 'pendiente',
+        )
+        return pagador, destinatario, transaccion
+    else:
+        reembolso = Reembolso.objects.create(
+            pagador = pagador,
+            destinatario = destinatario,
+            monto = data['monto'],
+            descripcion = data['descripcion'],
+            fecha = timezone.now(),
+            estado = 'pendiente',
+        )
+        return reembolso
     # No se redirige en este caso, ya que estamos en el contexto de un consumidor
 
 
+# Manejo del pago
 def iniciar_transaccion(transaccion):
 
     tarjeta = transaccion.metodo_pago.tarjeta
@@ -88,6 +93,7 @@ def iniciar_transaccion(transaccion):
         if (validacion_monto == False):
             print("El saldo actual de su tarjeta es insuficiente")
             transaccion.estado = 'fallido'
+            transaccion.fecha = timezone.now()
             transaccion.descripcion = "Transaccion fallida"
             return False
         else:
@@ -96,6 +102,8 @@ def iniciar_transaccion(transaccion):
                 json.dump(tarjetas_json, archivo, indent=4)
             print("Transaccion exitosa")
             transaccion.estado = 'valido'
+            transaccion.fecha = timezone.now()
+            print(transaccion.fecha)
             transaccion.descripcion = "Transaccion exitosa"
             transaccion.save()
 
@@ -113,4 +121,23 @@ def iniciar_transaccion(transaccion):
             #Evento facturas enviadas
 
             return True
+        
+
+# Manejo de un reembolso debido a cancelacion
+def iniciar_reembolso(reembolso):
+    # No tenemos base de datos. Solo será crear la nota de credito y enviarla por email.
+
+    #enviar evento de reembolso pendiente
+    #enviar evento de reembolso exitoso
+    print('etnro')
+    notaDeCredito = facturas.generar_nota_credito('pagos/nota_credito.html', reembolso)
+    mail_pagador = reembolso.pagador.email
+    facturas.enviar_nota_pdf_por_email_pagador(notaDeCredito, mail_pagador)
+
+    #enviar evento de generacion de nota de credito
+
+    return
+
+    
+        
     
