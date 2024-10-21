@@ -22,8 +22,8 @@ class PagosConfig(AppConfig):
         sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
 
         # Suscribirse a los tópicos de reserva y backoffice
-        subscribe_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'https', 'https://c946-190-174-49-242.ngrok-free.app/pagos/sns-webhook/')
-        subscribe_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'https', 'https://c946-190-174-49-242.ngrok-free.app/pagos/sns-webhook/')
+        subscribe_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'https', 'https://f6ec-190-174-49-242.ngrok-free.app/pagos/sns-webhook/')
+        subscribe_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'https', 'https://f6ec-190-174-49-242.ngrok-free.app/pagos/sns-webhook/')
 
         # Iniciar la conexión al WebSocket
         asyncio.run(self.connect_to_websocket())

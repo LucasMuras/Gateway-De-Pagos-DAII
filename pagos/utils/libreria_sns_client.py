@@ -68,7 +68,8 @@ def publish_to_topic(sns_client, topic_arn, event_name, message):
         "event_name": event_name,
         "body": message,
         "connection_id": config('CONNECTION_ID'),
-        "status": status
+        "status": status,
+        "message": "actualizacion"
     }
 
     event = {
