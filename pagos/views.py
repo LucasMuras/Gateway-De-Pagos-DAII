@@ -3,7 +3,7 @@ from .forms import PagoForm
 from .models import Pagador, Destinatario, Tarjeta, MetodoPago, Transaccion
 from .services.procesamiento_transaccion import iniciar_transaccion
 import json, requests
-from .consumidor_rabbitmq import recibir_mensajes_sns
+#from .consumidor_rabbitmq import recibir_mensajes_sns
 from .utils.utils import PagadorDic, DestinatarioDic
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -113,7 +113,7 @@ def sns_webhook(request):
                 print('holaa')
                 event = json.loads(request.body)
                 print(event)
-                recibir_mensajes_sns(event)
+                #recibir_mensajes_sns(event)
                 return JsonResponse({'mensaje': 'Evento procesado'}, status=200)
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Cuerpo de solicitud no es JSON'}, status=400)
@@ -138,6 +138,7 @@ def crear_reserva(request):
             nombre="Tienda Merequetengue",
             email="m@gmail.com"
         )
+        print(destinatario, "sadsakldnas")
 
         # Suponiendo que el monto es enviado desde el formulario
         monto = float(request.POST.get('monto', 100.00))  # Valor por defecto si no se proporciona

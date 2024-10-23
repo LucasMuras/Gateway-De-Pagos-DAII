@@ -2,45 +2,56 @@ import json, os
 from ..models import Pagador, Destinatario, Transaccion, Reembolso
 from . import validaciones, facturas
 from django.utils import timezone
+from ..utils.libreria_sns_client import publish_to_topic, init_sns_client
+from decouple import config
+from ..utils.utils import TransaccionDic, PagadorDic, DestinatarioDic, MetodoPagoDic, TarjetaDic
+
+# Cargar credenciales desde .env
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
+AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION')
 
 def guardar_entidades(mensaje, caso):
+    print('ENTOOOO')
     # Convertir el mensaje a un diccionario (asumiendo JSON)
     data = json.loads(mensaje)
 
-    # Crear y guardar los objetos Pagador y Destinatario
+   # Crear y guardar los objetos Pagador y Destinatario
     pagador = Pagador.objects.create(
-        id_externa=data['pagador']['id_externa'],
-        nombre=data['pagador']['nombre'],
-        apellido=data['pagador']['apellido'],
-        dni=data['pagador']['dni'],
-        email=data['pagador']['email'],
+        id_externa=data['pagador'].get('id_externa'),
+        nombre=data['pagador'].get('nombre'),
+        apellido=data['pagador'].get('apellido'),
+        dni=data['pagador'].get('dni'),
+        email=data['pagador'].get('email'),
     )
 
     destinatario = Destinatario.objects.create(
-        id_externa=data['destinatario']['id_externa'],
-        nombre=data['destinatario']['nombre'],
-        email=data['destinatario']['email'],
+        id_externa=data['destinatario'].get('id_externa'),
+        nombre=data['destinatario'].get('nombre'),
+        email=data['destinatario'].get('email'),
     )
 
-    if (caso == 'transaccion'):
+
+    if caso == 'transaccion':
         transaccion = Transaccion.objects.create(
-            pagador = pagador,
-            destinatario = destinatario,
-            monto = data['monto'],
-            descripcion = None,
-            metodo_pago = None,
-            fecha = None,
-            estado = 'pendiente',
+            pagador=pagador,
+            destinatario=destinatario,
+            monto=data.get('monto', 0.0),  # Usa un valor por defecto
+            descripcion=None,
+            metodo_pago=None,
+            fecha=None,
+            estado='pendiente',
         )
         return pagador, destinatario, transaccion
-    else:
+    else:  # Asumimos que 'caso' es 'reembolso'
         reembolso = Reembolso.objects.create(
-            pagador = pagador,
-            destinatario = destinatario,
-            monto = data['monto'],
-            descripcion = data['descripcion'],
-            fecha = timezone.now(),
-            estado = 'pendiente',
+            pagador=pagador,
+            destinatario=destinatario,
+            monto=data.get('monto', 0.0),  # Usa un valor por defecto
+            descripcion=data.get('descripcion', ''),  # Usa un valor por defecto
+            fecha=timezone.now(),
+            estado='pendiente',
         )
         return reembolso
     # No se redirige en este caso, ya que estamos en el contexto de un consumidor
@@ -48,6 +59,7 @@ def guardar_entidades(mensaje, caso):
 
 # Manejo del pago
 def iniciar_transaccion(transaccion):
+    sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
 
     tarjeta = transaccion.metodo_pago.tarjeta
     
@@ -83,7 +95,7 @@ def iniciar_transaccion(transaccion):
         # Verifico si eligió cuotas o en un pago unico
         if (transaccion.metodo_pago.en_cuotas == True):
             monto = round(transaccion.monto / transaccion.metodo_pago.cuotas, 2)
-            print(monto)
+            #print(monto)
         else:
             monto = transaccion.monto
 
@@ -103,11 +115,16 @@ def iniciar_transaccion(transaccion):
             print("Transaccion exitosa")
             transaccion.estado = 'valido'
             transaccion.fecha = timezone.now()
-            print(transaccion.fecha)
+            #print(transaccion.fecha)
             transaccion.descripcion = "Transaccion exitosa"
             transaccion.save()
 
+            cuerpo_mensaje = {
+                "estado": transaccion.estado,
+            }   
+
             #Evento transaccion exitosa
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionValida', cuerpo_mensaje)
 
             # Generar y enviar facturas
             factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)

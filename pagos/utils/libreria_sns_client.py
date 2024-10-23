@@ -86,12 +86,12 @@ def publish_to_topic(sns_client, topic_arn, event_name, message):
 
 
 # Suscripcion a un tópico de SNS
-def subscribe_to_topic(sns_client, topic_arn_to_suscribe, protocol, endpoint):
+def subscribe_to_topic(sns_client, topic_arn_to_suscribe, protocol, direction):
     try:
         response = sns_client.subscribe(
             TopicArn=topic_arn_to_suscribe,
             Protocol=protocol,  # Ej: 'https', 'email', 'sms', etc.
-            Endpoint=endpoint   # La URL o dirección donde se recibirán los mensajes
+            Endpoint=direction   # La URL o dirección donde se recibirán los mensajes
         )
         print(f"Suscripción exitosa: {response}")
         return response
