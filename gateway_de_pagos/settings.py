@@ -135,7 +135,7 @@ RABBITMQ_PASSWORD = 'guest'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'b180-190-174-48-167.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
+    '35d3-190-174-48-167.ngrok-free.app',  # Agrega tu dominio de Ngrok aquí
     # Puedes agregar más dominios si es necesario
 ]
 

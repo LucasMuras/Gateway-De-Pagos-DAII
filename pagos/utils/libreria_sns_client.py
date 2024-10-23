@@ -1,6 +1,7 @@
 import boto3, json
 from botocore.exceptions import ClientError
 from decouple import config
+import requests
 
 # Cargar credenciales desde .env
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
@@ -62,25 +63,31 @@ def publish_to_topic(sns_client, topic_arn, event_name, message):
 
     websocket_client = init_websocket_client();
 
-    print(status, 'EHGBWUFVWEUIFVEWUIF')
-    messagews = {
-        "topico": topic_arn.split(":")[-1],
-        "event_name": event_name,
-        "body": message,
-        "connection_id": config('CONNECTION_ID'),
-        "status": status,
-        "message": "actualizacion"
-    }
+    # Obtener los connection IDs desde los endpoints
+    connection_id_express = get_last_connection_id('https://eda-daii-production-9f47.up.railway.app/api/connection-id/server/last')
+    connection_id_react = get_last_connection_id('https://eda-daii-production-9f47.up.railway.app/api/connection-id/front/last')
 
-    event = {
-        "connectionId": config('CONNECTION_ID'),
-        "message": json.dumps(messagews)
-    }
-
-    connection_id = event['connectionId']
-    message_ws = event['message']
+    connections_id = [connection_id_express, connection_id_react]
+    print(connections_id, 'CONECTION IDS')
     
-    publish_to_websocket(connection_id, message_ws, websocket_client)
+    for connection_client_id in connections_id:
+        messagews = {
+            "topico": topic_arn.split(":")[-1],
+            "event_name": event_name,
+            "body": message,
+            "connection_id": connection_client_id,
+            "status": status,
+            "message": "actualizacion"
+        }
+        event = {
+            "connectionId": connection_client_id,
+            "message": json.dumps(messagews)
+        }
+
+        connection_id = event['connectionId']
+        message_ws = event['message']
+
+        publish_to_websocket(connection_id, message_ws, websocket_client)
 
     return response
 
@@ -98,3 +105,15 @@ def subscribe_to_topic(sns_client, topic_arn_to_suscribe, protocol, direction):
     except ClientError as e:
         print(f"Error en la suscripción: {e}")
         raise e
+    
+
+# Función para obtener el último connectionId de un endpoint
+def get_last_connection_id(endpoint_url):
+    try:
+        response = requests.get(endpoint_url)
+        response.raise_for_status()  # Lanza un error si la respuesta es un código de estado 4xx o 5xx
+        data = response.json()
+        return data.get('connection_id')  # Asumiendo que la respuesta tiene un campo 'connectionId'
+    except Exception as e:
+        print(f"Error al obtener el connectionId de {endpoint_url}: {e}")
+        return None
