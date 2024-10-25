@@ -7,16 +7,36 @@
         "cvv": "123",
         "estado": "activa",
         "tipo": "Visa",
-        "saldo": 43000.01
+        "saldo": 41566.68
+    },
+    {
+        "nombre_titular": "FERNANDA CUCHO",
+        "dni_titular": 33333333,
+        "numero": 5837492740922846,
+        "fecha_vencimiento": "2022-12-10",
+        "cvv": "133",
+        "estado": "inactiva",
+        "tipo": "Mastercard",
+        "saldo": 1000.0
     },
     {
         "nombre_titular": "MARTINA GONZALES",
         "dni_titular": 22222222,
-        "numero": 4532148803436467,
+        "numero": 4111111111111111,
         "fecha_vencimiento": "2025-12-31",
         "cvv": "120",
         "estado": "inactiva",
-        "tipo": "Mastercard",
+        "tipo": "Visa",
         "saldo": 1000.0
+    },
+    {
+        "nombre_titular": "ROGELIO DOMINGUEZ",
+        "dni_titular": 44444444,
+        "numero": 5555555555554444,
+        "fecha_vencimiento": "2027-08-08",
+        "cvv": "256",
+        "estado": "activa",
+        "tipo": "Mastercard",
+        "saldo": 0.0
     }
 ]

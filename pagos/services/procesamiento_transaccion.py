@@ -72,100 +72,104 @@ def iniciar_transaccion(transaccion):
 
     tarjeta_existente = {}
     for tarjeta_json in tarjetas_json:
+        print(tarjeta.numero, tarjeta_json['numero'])
         if int(tarjeta.numero) == tarjeta_json['numero']:
             print("Tarjeta encontrada")
             tarjeta_existente = tarjeta_json
             break
-        else:
-            print("Tarjeta no encontrada")
-            transaccion.estado = 'fallido'
-            return False
+        # else:
+        #     print("Tarjeta no encontrada")
+        #     transaccion.estado = 'fallido'
+        #     return (False, "La tarjeta no existe")
 
-    # Validaciones
-    validacion_dni = validaciones.validar_dni(tarjeta_existente, tarjeta)
-    validacion_vencimiento = validaciones.validar_vencimiento(tarjeta_existente)
-    validacion_estado = validaciones.validar_estado(tarjeta_existente)
-
-    if (validacion_vencimiento == False or validacion_estado == False or validacion_dni == False):
-        print("Tarjeta invalida")
-        transaccion.estado = 'fallido'
-        transaccion.fecha = timezone.now()
-        transaccion.descripcion = "La tarjeta no es válida"
-        transaccion.save()
-
-        cuerpo_mensaje = {
-                "estado": transaccion.estado,
-                "descripcion": "La tarjeta no es válida"
-            }   
-
-        #Evento transaccion exitosa
-        publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
-        
-        return False
+    if (tarjeta_existente == {}):
+        return (False, "La tarjeta no existe")
     else:
-        print(transaccion.metodo_pago.en_cuotas)
-        # Verifico si eligió cuotas o en un pago unico
-        if (transaccion.metodo_pago.en_cuotas == True):
-            monto = round(transaccion.monto / transaccion.metodo_pago.cuotas, 2)
-            #print(monto)
-        else:
-            monto = transaccion.monto
+        # Validaciones
+        validacion_dni = validaciones.validar_dni(tarjeta_existente, tarjeta)
+        validacion_vencimiento = validaciones.validar_vencimiento(tarjeta_existente)
+        validacion_estado = validaciones.validar_estado(tarjeta_existente)
 
-        # Validacion de saldo suficiente para abonar
-        validacion_monto = validaciones.validar_monto(tarjeta_existente, monto)
-
-        if (validacion_monto == False):
-            print("El saldo actual de su tarjeta es insuficiente")
+        if (validacion_vencimiento == False or validacion_estado == False or validacion_dni == False):
+            print("Tarjeta invalida")
             transaccion.estado = 'fallido'
             transaccion.fecha = timezone.now()
-            transaccion.descripcion = "Transaccion fallida"
-
-            cuerpo_mensaje = {
-                "estado": transaccion.estado,
-                "descripcion": "El saldo actual de su tarjeta es insuficiente"
-            }   
-
-            #Evento transaccion exitosa
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
-
-            return False
-        else:
-            tarjeta_existente['saldo'] = round(float(tarjeta_existente['saldo']) - float(monto), 2)
-            with open(ruta_tarjetas_json, 'w') as archivo:
-                json.dump(tarjetas_json, archivo, indent=4)
-            print("Transaccion exitosa")
-            transaccion.estado = 'valido'
-            transaccion.fecha = timezone.now()
-            #print(transaccion.fecha)
-            transaccion.descripcion = "Transaccion exitosa"
+            transaccion.descripcion = "La tarjeta no es válida"
             transaccion.save()
 
             cuerpo_mensaje = {
-                "estado": transaccion.estado,
-            }   
+                    "estado": transaccion.estado,
+                    "descripcion": "La tarjeta no es válida"
+                }   
 
             #Evento transaccion exitosa
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionValida', cuerpo_mensaje)
-
-            # Generar y enviar facturas
-            factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
-            factura_tipo_B = facturas.generar_factura_tipo_B('pagos/factura_tipo_B.html', transaccion)
-
-            mail_pagador = transaccion.pagador.email
-            mail_destinatario = transaccion.destinatario.email
-            facturas.enviar_pdf_por_email_pagador(factura_tipo_B, mail_pagador)
-            facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
-
-            #Evento facturas enviadas
-            cuerpo_mensaje = {
-                "descripcion": "Facturas tipo A y B enviadas",
-            }   
-
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaClienteGenerada', cuerpo_mensaje)
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaAdministradorGenerada', cuerpo_mensaje)
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
             
-            return True
-        
+            return (False, transaccion.descripcion)
+        else:
+            print(transaccion.metodo_pago.en_cuotas)
+            # Verifico si eligió cuotas o en un pago unico
+            if (transaccion.metodo_pago.en_cuotas == True):
+                monto = round(transaccion.monto / transaccion.metodo_pago.cuotas, 2)
+                #print(monto)
+            else:
+                monto = transaccion.monto
+
+            # Validacion de saldo suficiente para abonar
+            validacion_monto = validaciones.validar_monto(tarjeta_existente, monto)
+
+            if (validacion_monto == False):
+                print("El saldo actual de su tarjeta es insuficiente")
+                transaccion.estado = 'fallido'
+                transaccion.fecha = timezone.now()
+                transaccion.descripcion = "Transaccion fallida"
+
+                cuerpo_mensaje = {
+                    "estado": transaccion.estado,
+                    "descripcion": "El saldo actual de su tarjeta es insuficiente"
+                }   
+
+                #Evento transaccion exitosa
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
+
+                return (False, "El saldo actual de su tarjeta es insuficiente")
+            else:
+                tarjeta_existente['saldo'] = round(float(tarjeta_existente['saldo']) - float(monto), 2)
+                with open(ruta_tarjetas_json, 'w') as archivo:
+                    json.dump(tarjetas_json, archivo, indent=4)
+                print("Transaccion exitosa")
+                transaccion.estado = 'valido'
+                transaccion.fecha = timezone.now()
+                #print(transaccion.fecha)
+                transaccion.descripcion = "Transaccion exitosa"
+                transaccion.save()
+
+                cuerpo_mensaje = {
+                    "estado": transaccion.estado,
+                }   
+
+                #Evento transaccion exitosa
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionValida', cuerpo_mensaje)
+
+                # Generar y enviar facturas
+                factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
+                factura_tipo_B = facturas.generar_factura_tipo_B('pagos/factura_tipo_B.html', transaccion)
+
+                mail_pagador = transaccion.pagador.email
+                mail_destinatario = transaccion.destinatario.email
+                facturas.enviar_pdf_por_email_pagador(factura_tipo_B, mail_pagador)
+                facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
+
+                #Evento facturas enviadas
+                cuerpo_mensaje = {
+                    "descripcion": "Facturas tipo A y B enviadas",
+                }   
+
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaClienteGenerada', cuerpo_mensaje)
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaAdministradorGenerada', cuerpo_mensaje)
+                
+                return (True, "Transaccion completada de manera exitosa, esté pendiente a su casilla de email donde se le enviara la factura correspondiente")
+            
 
 # Manejo de un reembolso debido a cancelacion
 def iniciar_reembolso(reembolso):

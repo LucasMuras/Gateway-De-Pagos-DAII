@@ -73,16 +73,16 @@ def pago(request):
             print(numero)
 
             # procesar pago
-            transaccion_completa_exitosa = iniciar_transaccion(transaccion)
+            transaccion_completa_exitosa, asunto = iniciar_transaccion(transaccion)
             print(transaccion_completa_exitosa)
 
             #Aun no, ver bien el puerto, dice 3000 deberia ser 8000
             #enviar_evento_transaccion(transaccion)
 
             if (transaccion_completa_exitosa == True):
-                return JsonResponse({'status': 'Transacción exitosa'}, status=200)
+                return JsonResponse({'status': 'Transacción exitosa', 'asunto': asunto}, status=200)
             else:
-                return JsonResponse({'status': 'Transacción fallida'}, status=400)
+                return JsonResponse({'status': 'Transacción fallida', 'asunto': asunto}, status=400)
         else:
             #form = PagoForm(request.POST)
             print("invalido")
