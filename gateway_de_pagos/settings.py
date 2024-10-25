@@ -30,8 +30,9 @@ DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = [
     'gateway-de-pagos-daii-production.up.railway.app',
-    'localhost',
-    '127.0.0.1'
+    'gateway-de-pagos-daii.railway.internal',
+    #'localhost',
+    #'127.0.0.1'
 ]
 
 
