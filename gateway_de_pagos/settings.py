@@ -31,7 +31,6 @@ DEBUG = config('DEBUG')
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    '35d3-190-174-48-167.ngrok-free.app'
     'gateway-de-pagos-daii-production.up.railway.app'
 ]
 
