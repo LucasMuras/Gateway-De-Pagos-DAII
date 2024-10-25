@@ -154,11 +154,14 @@ def iniciar_transaccion(transaccion):
                 # Generar y enviar facturas
                 factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
                 factura_tipo_B = facturas.generar_factura_tipo_B('pagos/factura_tipo_B.html', transaccion)
-
+                print(factura_tipo_A, factura_tipo_B, 'nioincwecweiocnewicnweicnwienciowenciwenci')
                 mail_pagador = transaccion.pagador.email
                 mail_destinatario = transaccion.destinatario.email
-                facturas.enviar_pdf_por_email_pagador(factura_tipo_B, mail_pagador)
-                facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
+                try:
+                    facturas.enviar_pdf_por_email_pagador(factura_tipo_B, mail_pagador)
+                    facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
+                except Exception as e:
+                    print("Error al enviar los correos: AAAAAAAAAAAAAAAAAAAAAAAAAAKMDDDDDDDDDDDDDDDDDDDDDDCN", e)
 
                 #Evento facturas enviadas
                 cuerpo_mensaje = {
