@@ -1,7 +1,7 @@
 from django import forms
 from datetime import datetime
 
-class PagoForm(forms.Form):
+class PagoForm(forms.Form): 
     nombre_titular = forms.CharField(max_length=100, label='Nombre del Titular', widget=forms.TextInput(attrs={'type': 'text'}))
     dni = forms.CharField(max_length=8, label='DNI', widget=forms.TextInput(attrs={'type': 'number'}))
     #tarjeta
