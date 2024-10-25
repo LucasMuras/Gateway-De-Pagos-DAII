@@ -29,9 +29,9 @@ SECRET_KEY = config('SECRET_KEY')
 DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = [
+    'gateway-de-pagos-daii-production.up.railway.app',
     'localhost',
-    '127.0.0.1',
-    'gateway-de-pagos-daii-production.up.railway.app'
+    '127.0.0.1'
 ]
 
 
