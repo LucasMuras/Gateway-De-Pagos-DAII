@@ -89,6 +89,18 @@ def iniciar_transaccion(transaccion):
     if (validacion_vencimiento == False or validacion_estado == False or validacion_dni == False):
         print("Tarjeta invalida")
         transaccion.estado = 'fallido'
+        transaccion.fecha = timezone.now()
+        transaccion.descripcion = "La tarjeta no es válida"
+        transaccion.save()
+
+        cuerpo_mensaje = {
+                "estado": transaccion.estado,
+                "descripcion": "La tarjeta no es válida"
+            }   
+
+        #Evento transaccion exitosa
+        publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
+        
         return False
     else:
         print(transaccion.metodo_pago.en_cuotas)
@@ -107,6 +119,15 @@ def iniciar_transaccion(transaccion):
             transaccion.estado = 'fallido'
             transaccion.fecha = timezone.now()
             transaccion.descripcion = "Transaccion fallida"
+
+            cuerpo_mensaje = {
+                "estado": transaccion.estado,
+                "descripcion": "El saldo actual de su tarjeta es insuficiente"
+            }   
+
+            #Evento transaccion exitosa
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
+
             return False
         else:
             tarjeta_existente['saldo'] = round(float(tarjeta_existente['saldo']) - float(monto), 2)
@@ -136,22 +157,40 @@ def iniciar_transaccion(transaccion):
             facturas.enviar_pdf_por_email_destinatario(factura_tipo_A, factura_tipo_B, mail_destinatario)
 
             #Evento facturas enviadas
+            cuerpo_mensaje = {
+                "descripcion": "Facturas tipo A y B enviadas",
+            }   
 
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'FacturaClienteGenerada', cuerpo_mensaje)
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'FacturaAdministradorGenerada', cuerpo_mensaje)
+            
             return True
         
 
 # Manejo de un reembolso debido a cancelacion
 def iniciar_reembolso(reembolso):
+    sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
+
     # No tenemos base de datos. Solo será crear la nota de credito y enviarla por email.
 
-    #enviar evento de reembolso pendiente
     #enviar evento de reembolso exitoso
+    cuerpo_mensaje = {
+        "estado": 'valido',
+    }   
+
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'ReembolsoExitoso', cuerpo_mensaje)
+
     print('etnro')
     notaDeCredito = facturas.generar_nota_credito('pagos/nota_credito.html', reembolso)
     mail_pagador = reembolso.pagador.email
     facturas.enviar_nota_pdf_por_email_pagador(notaDeCredito, mail_pagador)
 
     #enviar evento de generacion de nota de credito
+    cuerpo_mensaje = {
+        "descripcion": "Nota de crédito enviada",
+    }   
+
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'NotaDeCreditoGenerada', cuerpo_mensaje)
 
     return
 

@@ -37,9 +37,10 @@ def pago(request):
             fecha_vencimiento = form.cleaned_data['fecha_vencimiento']
             cvv = form.cleaned_data['cvv']
             tipo_tarjeta = form.cleaned_data['tipo_tarjeta']
+            nombre_titular = form.cleaned_data['nombre_titular']
 
             tarjeta = Tarjeta.objects.create(
-                nombre_titular = (pagador.nombre + " " + pagador.apellido).upper(),
+                nombre_titular = nombre_titular,
                 dni = dni,
                 numero = numero,
                 fecha_vencimiento = fecha_vencimiento,
@@ -85,6 +86,22 @@ def pago(request):
     form =  PagoForm(request.POST)
     return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion':transaccion})
 
+
+def detallesTransaccion(request):
+    if request.method == 'GET':
+        transaccion = Transaccion.objects.last()
+        if transaccion:
+            transaccion_data = {
+                'nombre_destinatario': transaccion.destinatario.nombre,
+                'monto': transaccion.monto,
+                'descripcion': transaccion.descripcion
+            }
+            return JsonResponse(transaccion_data)
+        else:
+            return JsonResponse({'error': 'No hay transacciones disponibles.'}, status=404)
+    else:
+        return JsonResponse({'error': 'Método no permitido.'}, status=405)
+    
 
 # Se verifica la firma (estar conectado/suscripto al SNS) si sí se procesa el evento
 @csrf_exempt
