@@ -1,0 +1,3 @@
+[build]
+  # Indica que se trata de una aplicación Python
+  entrypoint = "python manage.py migrate && gunicorn tu_proyecto.wsgi --bind 0.0.0.0:$PORT"

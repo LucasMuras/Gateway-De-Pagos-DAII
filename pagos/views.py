@@ -80,8 +80,30 @@ def pago(request):
             #enviar_evento_transaccion(transaccion)
 
             if (transaccion_completa_exitosa == True):
+                # Aquí se eliminan los objetos después de la transacción
+                try:
+                    # Eliminar los objetos relacionados
+                    pagador.delete()
+                    destinatario.delete()
+                    transaccion.delete()
+                    metodo_pago.delete()
+                    tarjeta.delete()
+                    print("Todos los objetos relacionados han sido eliminados.")
+                except Exception as e:
+                    print(f"Error al eliminar objetos: {e}")
                 return JsonResponse({'status': 'Transacción exitosa', 'asunto': asunto}, status=200)
             else:
+                # Aquí se eliminan los objetos después de la transacción
+                try:
+                    # Eliminar los objetos relacionados
+                    pagador.delete()
+                    destinatario.delete()
+                    transaccion.delete()
+                    metodo_pago.delete()
+                    tarjeta.delete()
+                    print("Todos los objetos relacionados han sido eliminados.")
+                except Exception as e:
+                    print(f"Error al eliminar objetos: {e}")
                 return JsonResponse({'status': 'Transacción fallida', 'asunto': asunto}, status=400)
         else:
             #form = PagoForm(request.POST)
@@ -108,7 +130,7 @@ def detallesTransaccion(request):
         return JsonResponse({'error': 'Método no permitido.'}, status=405)
     
 
-# Se verifica la firma (estar conectado/suscripto al SNS) si sí se procesa el evento
+# Se verifica la firma (estar conectado/suscripto al SNS) si sí se procesa el evento (SIN USO)
 @csrf_exempt
 def sns_webhook(request):
     if request.method == 'POST':
