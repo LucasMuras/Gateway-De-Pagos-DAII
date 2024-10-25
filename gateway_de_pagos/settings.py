@@ -151,6 +151,10 @@ ALLOWED_HOSTS = [
     # Puedes agregar más dominios si es necesario
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://gateway-de-pagos-daii-production.up.railway.app'
+]
+
 # Configuración de AWS
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
