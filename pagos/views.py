@@ -9,7 +9,11 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from .utils.libreria_sns_client import publish_to_topic, init_sns_client  # Asegúrate de importar tus funciones
 from decouple import config
+from django.views.decorators.csrf import ensure_csrf_cookie
 
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    return JsonResponse({'csrfToken': request.META.get('CSRF_COOKIE', '')})
 
 
 @csrf_exempt 
@@ -25,19 +29,21 @@ def pago(request):
         return render(request, 'pagos/pago.html', {'error': 'No se encontró ninguna reserva.'})
 
     if request.method == 'POST':
-        form = PagoForm(request.POST)
-        print(request.POST)
+        data = json.loads(request.body)
+        print(data)
+        form = PagoForm(data)
+        print(request.POST, form.is_valid())
         if form.is_valid():
             # Nos guardamos los objetos que implican la transaccion
-            en_cuotas = form.cleaned_data['cuotas']
-            tipo_metodo_pago = form.cleaned_data['tipo_metodo_pago']
-            cantidad_cuotas = form.cleaned_data['cantidad_cuotas']
-            dni = form.cleaned_data['dni']
-            numero = form.cleaned_data['numero_tarjeta']
-            fecha_vencimiento = form.cleaned_data['fecha_vencimiento']
-            cvv = form.cleaned_data['cvv']
-            tipo_tarjeta = form.cleaned_data['tipo_tarjeta']
-            nombre_titular = form.cleaned_data['nombre_titular']
+            en_cuotas = data.get('en_cuotas')
+            tipo_metodo_pago = data.get('tipo_metodo_pago')
+            cantidad_cuotas = data.get('cantidad_cuotas')
+            dni = data.get('dni')
+            numero = data.get('numero_tarjeta')
+            fecha_vencimiento = data.get('fecha_vencimiento')
+            cvv = data.get('cvv')
+            tipo_tarjeta = data.get('tipo_tarjeta')
+            nombre_titular = data.get('nombre_titular')
 
             tarjeta = Tarjeta.objects.create(
                 nombre_titular = nombre_titular,
@@ -74,15 +80,14 @@ def pago(request):
             #enviar_evento_transaccion(transaccion)
 
             if (transaccion_completa_exitosa == True):
-                return render(request, 'pagos/pago_exitoso.html')
+                return JsonResponse({'status': 'Transacción exitosa'}, status=200)
             else:
-                return render(request, 'pagos/pago_fallido.html')
-            
-        
+                return JsonResponse({'status': 'Transacción fallida'}, status=400)
         else:
-            form = PagoForm(request.POST)
+            #form = PagoForm(request.POST)
             print("invalido")
-            form = PagoForm()
+            form = PagoForm(data)
+            return JsonResponse({'error': 'Datos de formulario inválidos', 'detalles': form.errors}, status=400)
     form =  PagoForm(request.POST)
     return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion':transaccion})
 

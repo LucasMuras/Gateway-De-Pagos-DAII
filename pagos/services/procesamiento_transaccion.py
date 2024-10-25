@@ -161,8 +161,8 @@ def iniciar_transaccion(transaccion):
                 "descripcion": "Facturas tipo A y B enviadas",
             }   
 
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'FacturaClienteGenerada', cuerpo_mensaje)
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'FacturaAdministradorGenerada', cuerpo_mensaje)
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaClienteGenerada', cuerpo_mensaje)
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaAdministradorGenerada', cuerpo_mensaje)
             
             return True
         
@@ -178,7 +178,7 @@ def iniciar_reembolso(reembolso):
         "estado": 'valido',
     }   
 
-    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'ReembolsoExitoso', cuerpo_mensaje)
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'reembolsoValido', cuerpo_mensaje)
 
     print('etnro')
     notaDeCredito = facturas.generar_nota_credito('pagos/nota_credito.html', reembolso)
@@ -190,7 +190,7 @@ def iniciar_reembolso(reembolso):
         "descripcion": "Nota de crédito enviada",
     }   
 
-    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'NotaDeCreditoGenerada', cuerpo_mensaje)
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'notaCreditoGenerada', cuerpo_mensaje)
 
     return
 
