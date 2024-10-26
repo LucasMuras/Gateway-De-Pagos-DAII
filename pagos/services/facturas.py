@@ -98,12 +98,19 @@ def enviar_pdf_por_email_pagador(factura_tipo_B_pdf, mail_pagador):
         [mail_pagador],  # to
     )
 
+    print(email)
+
     # Adjuntar el PDF si se generó correctamente
     if factura_tipo_B_pdf:
         email.attach('factura.pdf', factura_tipo_B_pdf, 'application/pdf')
 
-    # Enviar el correo
-    email.send()
+    try:
+        # Enviar el correo
+        email.send()
+        print("El correo se ha enviado correctamente.")
+    except Exception as e:
+        # Manejar la excepción
+        print(f"Error al enviar el correo: {e}")
 
 
 def enviar_pdf_por_email_destinatario(factura_tipo_A_pdf, factura_tipo_B_pdf, mail_destinatario):

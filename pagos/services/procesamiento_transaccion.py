@@ -154,7 +154,7 @@ def iniciar_transaccion(transaccion):
                 # Generar y enviar facturas
                 factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
                 factura_tipo_B = facturas.generar_factura_tipo_B('pagos/factura_tipo_B.html', transaccion)
-                print(factura_tipo_A, factura_tipo_B, 'nioincwecweiocnewicnweicnwienciowenciwenci')
+                #print(factura_tipo_A, factura_tipo_B, 'nioincwecweiocnewicnweicnwienciowenciwenci')
                 mail_pagador = transaccion.pagador.email
                 mail_destinatario = transaccion.destinatario.email
                 try:
