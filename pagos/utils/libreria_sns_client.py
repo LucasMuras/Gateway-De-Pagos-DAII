@@ -64,8 +64,8 @@ def publish_to_topic(sns_client, topic_arn, event_name, message):
     websocket_client = init_websocket_client();
 
     # Obtener los connection IDs desde los endpoints
-    connection_id_express = get_last_connection_id('https://eda-daii-production-9f47.up.railway.app/api/connection-id/server/last')
-    connection_id_react = get_last_connection_id('https://eda-daii-production-9f47.up.railway.app/api/connection-id/front/last')
+    connection_id_express = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/server/last')
+    connection_id_react = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/front/last')
 
     connections_id = [connection_id_express, connection_id_react]
     print(connections_id, 'CONECTION IDS')
