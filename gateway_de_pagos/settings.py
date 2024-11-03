@@ -147,12 +147,12 @@ RABBITMQ_PASSWORD = 'guest'
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'gateway-de-pagos-daii-production.up.railway.app',  # Agrega tu dominio de Ngrok aquí
+    'ec2-34-235-212-207.compute-1.amazonaws.com',  # Agrega tu dominio de Ngrok aquí
     # Puedes agregar más dominios si es necesario
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://gateway-de-pagos-daii-production.up.railway.app'
+    'http://ec2-34-235-212-207.compute-1.amazonaws.com:8000'
 ]
 
 # Configuración de AWS
