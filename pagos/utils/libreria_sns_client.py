@@ -61,33 +61,38 @@ def publish_to_topic(sns_client, topic_arn, event_name, message):
         print(f"Error al publicar el mensaje: {e}")
         status = "error"  # Asignar "error" si ocurre una excepción
 
-    websocket_client = init_websocket_client();
 
-    # Obtener los connection IDs desde los endpoints
-    connection_id_express = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/server/last')
-    connection_id_react = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/front/last')
+    try:
+        websocket_client = init_websocket_client();
 
-    connections_id = [connection_id_express, connection_id_react]
-    print(connections_id, 'CONECTION IDS')
-    
-    for connection_client_id in connections_id:
-        messagews = {
-            "topico": topic_arn.split(":")[-1],
-            "event_name": event_name,
-            "body": message,
-            "connection_id": connection_client_id,
-            "status": status,
-            "message": "actualizacion"
-        }
-        event = {
-            "connectionId": connection_client_id,
-            "message": json.dumps(messagews)
-        }
+        # Obtener los connection IDs desde los endpoints
+        connection_id_express = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/server/last')
+        connection_id_react = get_last_connection_id('http://ec2-34-235-212-207.compute-1.amazonaws.com:5000/api/connection-id/front/last')
 
-        connection_id = event['connectionId']
-        message_ws = event['message']
+        connections_id = [connection_id_express, connection_id_react]
+        print(connections_id, 'CONECTION IDS')
+        
+        for connection_client_id in connections_id:
+            messagews = {
+                "topico": topic_arn.split(":")[-1],
+                "event_name": event_name,
+                "body": message,
+                "connection_id": connection_client_id,
+                "status": status,
+                "message": "actualizacion"
+            }
+            event = {
+                "connectionId": connection_client_id,
+                "message": json.dumps(messagews)
+            }
 
-        publish_to_websocket(connection_id, message_ws, websocket_client)
+            connection_id = event['connectionId']
+            message_ws = event['message']
+
+            publish_to_websocket(connection_id, message_ws, websocket_client)
+    except Exception as e:
+        print(f"Error al hacer el log del evento {event_name} : {e}")
+        status = "error"
 
     return response
 

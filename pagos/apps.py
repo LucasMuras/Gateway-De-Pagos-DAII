@@ -54,7 +54,7 @@ class PagosConfig(AppConfig):
         else:
             print("El hilo de SQS ya está activo.")
 
-        # Iniciar la conexión al WebSocket
+        # Iniciar la conexión al WebSocket (otro hilo)
         threading.Thread(target=self.start_websocket_connection, daemon=True).start()
 
 
