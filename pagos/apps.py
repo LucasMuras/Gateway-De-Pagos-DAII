@@ -28,6 +28,7 @@ class PagosConfig(AppConfig):
         #subscribe_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'https', 'https://f6ec-190-174-49-242.ngrok-free.app/pagos/sns-webhook/')
 
         subscribe_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'sqs', config('QUEUE_ARN_GDP'))
+        subscribe_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'sqs', config('QUEUE_ARN_GDP'))
 
 
         # Escuchar cola SQS
