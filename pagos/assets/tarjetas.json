@@ -1,13 +1,13 @@
 [
     {
-        "nombre_titular": "RODRIGO NUTRIALES",
-        "dni_titular": 11111111,
+        "nombre_titular": "GUSTAVO JORGE",
+        "dni_titular": 123,
         "numero": 4234567890000000,
         "fecha_vencimiento": "2025-09-11",
         "cvv": "123",
         "estado": "activa",
         "tipo": "Visa",
-        "saldo": 40966.68
+        "saldo": 22966.68
     },
     {
         "nombre_titular": "FERNANDA CUCHO",

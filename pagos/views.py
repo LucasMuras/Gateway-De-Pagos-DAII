@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .utils.libreria_sns_client import publish_to_topic, init_sns_client  # Asegúrate de importar tus funciones
 from decouple import config
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.shortcuts import get_object_or_404
 
 @ensure_csrf_cookie
 def get_csrf_token(request):
@@ -17,12 +18,12 @@ def get_csrf_token(request):
 
 
 @csrf_exempt 
-def pago(request):
+def pago(request, transaccion_id):
    
     # Obtenemos al pagador y destinario que estan en el momento para hacer la transaccion
-    pagador = Pagador.objects.last()
-    destinatario = Destinatario.objects.last()
-    transaccion = Transaccion.objects.last()
+    transaccion = get_object_or_404(Transaccion, id_external=transaccion_id)
+    pagador = transaccion.pagador
+    destinatario = transaccion.destinatario
     print(transaccion)
 
     if pagador is None or destinatario is None: 
@@ -62,13 +63,12 @@ def pago(request):
             )
 
             # hacer transaccion completa
-            transaccion.descripcion = "Transaccion Iniciada"
             transaccion.metodo_pago = metodo_pago
             transaccion.estado = 'iniciado'
             transaccion.save()
 
 
-            print(pagador.nombre)
+            print(pagador.name)
             print(en_cuotas)
             print(numero)
 
@@ -83,11 +83,11 @@ def pago(request):
                 # Aquí se eliminan los objetos después de la transacción
                 try:
                     # Eliminar los objetos relacionados
-                    pagador.delete()
-                    destinatario.delete()
-                    transaccion.delete()
-                    metodo_pago.delete()
-                    tarjeta.delete()
+                    #pagador.delete()
+                    #destinatario.delete()
+                    #transaccion.delete()
+                    #metodo_pago.delete()
+                    #tarjeta.delete()
                     print("Todos los objetos relacionados han sido eliminados.")
                 except Exception as e:
                     print(f"Error al eliminar objetos: {e}")
@@ -96,11 +96,11 @@ def pago(request):
                 # Aquí se eliminan los objetos después de la transacción
                 try:
                     # Eliminar los objetos relacionados
-                    pagador.delete()
-                    destinatario.delete()
-                    transaccion.delete()
-                    metodo_pago.delete()
-                    tarjeta.delete()
+                    #pagador.delete()
+                    #destinatario.delete()
+                    #transaccion.delete()
+                    #metodo_pago.delete()
+                    #tarjeta.delete()
                     print("Todos los objetos relacionados han sido eliminados.")
                 except Exception as e:
                     print(f"Error al eliminar objetos: {e}")
@@ -114,9 +114,9 @@ def pago(request):
     return render(request, 'pagos/pago.html', {'form': form, 'reserva':pagador, 'destinatario':destinatario, 'transaccion':transaccion})
 
 
-def detallesTransaccion(request):
+def detallesTransaccion(request, transaccion_id):
     if request.method == 'GET':
-        transaccion = Transaccion.objects.last()
+        transaccion = get_object_or_404(Transaccion, id_external=transaccion_id)
         if transaccion:
             transaccion_data = {
                 'nombre_destinatario': transaccion.destinatario.nombre,
@@ -169,6 +169,38 @@ def sns_webhook(request):
 def crear_reserva(request):
     if request.method == 'POST':
         # Datos hardcodeados para el pagador y destinatario
+
+        reserva = {
+            "id": 3,
+            "room": 1,
+            "start_date": "2021-07-01",
+            "end_date": "2021-07-10",
+            "client": 1,
+            "services": ["hola"],
+            "status": "X",  # esto cambio
+            "client_info": {
+                "id": 1,
+                "name": "Rodrigo",
+                "surname": "Nutriales",
+                "phone": 123456789,
+                "document": 123456789,
+                "birth_date": "2000-01-01",
+                "email": "rn@gmail.com"
+             },
+             "room_info": {
+                "id": 1,
+                "hotel": 1,
+                "floor": 1,
+                "name": "A",
+                "price": 100.00,
+                "state": "B",
+                "double_beds_amount": 1,
+                "single_beds_amount": 1,
+                "images": "default_image.jpg"
+             },
+             "total_price": 100.00
+        }
+
         pagador = PagadorDic(
             id_externa=1,
             nombre="Rodrigo",
@@ -212,29 +244,36 @@ def crear_reserva(request):
 @csrf_exempt
 def reembolso(request):
     if request.method == 'POST':
-        # Datos hardcodeados para el pagador y destinatario
-        pagador = PagadorDic(
-            id_externa=1,
-            nombre="Rodrigo",
-            apellido="Nutriales",
-            dni=88447755,
-            email="rod.nut@example.com",
-        )
-        
-        destinatario = DestinatarioDic(
-            id_externa=1,
-            nombre="Tienda Merequetengue",
-            email="m@gmail.com"
-        )
-
-        # Suponiendo que el monto es enviado desde el formulario
-        monto = float(request.POST.get('monto', 100.00))  # Valor por defecto si no se proporciona
 
         cuerpo_mensaje = {
-            'pagador': pagador.to_dict(),
-            'destinatario': destinatario.to_dict(),
-            'monto': monto,
-            'descripcion': 'Reembolso por cancelación de reserva'
+            "id": 3,
+            "room": 1,
+            "start_date": "2021-07-01",
+            "end_date": "2021-07-10",
+            "client": 1,
+            "services": ["hola"],
+            "status": "X",  # esto cambio
+            "client_info": {
+                "id": 1,
+                "name": "Rodrigo",
+                "surname": "Nutriales",
+                "phone": 123456789,
+                "document": 123456789,
+                "birth_date": "2000-01-01",
+                "email": "rn@gmail.com"
+             },
+             "room_info": {
+                "id": 1,
+                "hotel": 1,
+                "floor": 1,
+                "name": "A",
+                "price": 100.00,
+                "state": "B",
+                "double_beds_amount": 1,
+                "single_beds_amount": 1,
+                "images": "default_image.jpg"
+             },
+             "total_price": 100.00
         }
 
         # Credenciales de AWS SNS
@@ -245,7 +284,7 @@ def reembolso(request):
 
         sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
         # Enviar el evento al tópico SNS
-        publish_to_topic(sns_client, config('TOPIC_ARN_RESERVA'), 'reservaCancelada', cuerpo_mensaje)
+        publish_to_topic(sns_client, config('TOPIC_ARN_BACKOFFICE'), 'reservaCancelada', cuerpo_mensaje)
 
         return JsonResponse({'mensaje': 'Reembolso enviado'})
 

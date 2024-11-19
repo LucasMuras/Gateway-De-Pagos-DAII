@@ -12,49 +12,138 @@ AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_SESSION_TOKEN = config('AWS_SESSION_TOKEN')
 AWS_DEFAULT_REGION = config('AWS_DEFAULT_REGION')
 
-def guardar_entidades(mensaje, caso):
+def guardar_entidades(mensaje, caso, topico):
     print('ENTOOOO')
     # Convertir el mensaje a un diccionario (asumiendo JSON)
     data = json.loads(mensaje)
+    #print("DATATATA", data['user_profile'].get('id'), data)
 
    # Crear y guardar los objetos Pagador y Destinatario
-    pagador = Pagador.objects.create(
-        id_externa=data['pagador'].get('id_externa'),
-        nombre=data['pagador'].get('nombre'),
-        apellido=data['pagador'].get('apellido'),
-        dni=data['pagador'].get('dni'),
-        email=data['pagador'].get('email'),
-    )
-
-    destinatario = Destinatario.objects.create(
-        id_externa=data['destinatario'].get('id_externa'),
-        nombre=data['destinatario'].get('nombre'),
-        email=data['destinatario'].get('email'),
-    )
-
-
-    if caso == 'transaccion':
-        transaccion = Transaccion.objects.create(
-            pagador=pagador,
-            destinatario=destinatario,
-            monto=data.get('monto', 0.0),  # Usa un valor por defecto
-            descripcion=None,
-            metodo_pago=None,
-            fecha=None,
-            estado='pendiente',
+    if (topico == 'reserva'):
+        pagador = Pagador.objects.create(
+            id_external=data['user_profile'].get('id'),
+            name=data['user_profile'].get('name'),
+            surname=data['user_profile'].get('surname'),
+            phone=data['user_profile'].get('phone'),
+            document=data['user_profile'].get('document'),
+            birth_date=data['user_profile'].get('birth_date'),
+            email=data['user_profile'].get('email'),
         )
-        return pagador, destinatario, transaccion
-    else:  # Asumimos que 'caso' es 'reembolso'
-        reembolso = Reembolso.objects.create(
-            pagador=pagador,
-            destinatario=destinatario,
-            monto=data.get('monto', 0.0),  # Usa un valor por defecto
-            descripcion=data.get('descripcion', ''),  # Usa un valor por defecto
-            fecha=timezone.now(),
-            estado='pendiente',
+
+        destinatario = Destinatario.objects.create(
+            id_external=data['room'].get('id'),
+            hotel=data['room'].get('hotel').get('id'),
+            floor=data['room'].get('floor'),
+            name=data['room'].get('hotel').get('name'),
+            price=data['room'].get('price'),
+            state=data['room'].get('state'),
+            double_beds_amount=data['room'].get('double_beds_amount'),
+            single_beds_amount=data['room'].get('single_beds_amount'),
+            images=data['room'].get('images'),
+            email = data['room'].get('hotel').get('email')
         )
-        return reembolso
+
+        if caso == 'transaccion':
+            transaccion = Transaccion.objects.create(
+                id_external = data['id'],
+                room = data['room'].get('id'),
+                start_date = data.get('start_date'),
+                end_date = data.get('end_date'),
+                #client = models.IntegerField(default=0)
+                services = data.get('services'),
+                pagador=pagador,
+                destinatario=destinatario,
+                monto=data.get('total_price'),  # Usa un valor por defecto
+                metodo_pago=None,
+                fecha=None,
+                estado='pendiente',
+            )
+            return transaccion
+        else:  # Asumimos que 'caso' es 'reembolso'
+            reembolso = Reembolso.objects.create(
+                id_external=data.get('id'),
+                room=data['room'].get('id'),
+                start_date=data.get('start_date'),
+                end_date=data.get('end_date'),
+                client=data['user_profile'].get('id'),
+                services=data['services'],
+                pagador=pagador,
+                destinatario=destinatario,
+                monto=data.get('total_price'),  # Usa un valor por defecto
+                descripcion="Cancelación de reserva",
+                fecha=timezone.now(),
+                estado='pendiente',
+            )
+            return reembolso
+    else:
+        pagador = Pagador.objects.create(
+            id_external=data['client_info'].get('id'),
+            name=data['client_info'].get('name'),
+            surname=data['client_info'].get('surname'),
+            phone=data['client_info'].get('phone'),
+            document=data['client_info'].get('document'),
+            birth_date=data['client_info'].get('birth_date'),
+            email=data['client_info'].get('email'),
+        )
+
+        destinatario = Destinatario.objects.create(
+            id_external=data.get('id'),
+            hotel=data['room_info'].get('hotel'),
+            floor=data['room_info'].get('floor'),
+            name=data['room_info'].get('name'),
+            price=data['room_info'].get('price'),
+            state=data['room_info'].get('state'),
+            double_beds_amount=data['room_info'].get('double_beds_amount'),
+            single_beds_amount=data['room_info'].get('single_beds_amount'),
+            images=data['room_info'].get('images'),
+            #email = data['room_info'].get('email')
+            )
+        
+        if caso == 'transaccion':
+            transaccion = Transaccion.objects.create(
+                id_external = data['id'],
+                room = data['room'].get('id'),
+                start_date = data.get('start_date'),
+                end_date = data.get('end_date'),
+                #client = models.IntegerField(default=0)
+                services = data.get('services'),
+                pagador=pagador,
+                destinatario=destinatario,
+                monto=data.get('total_price'),  # Usa un valor por defecto
+                metodo_pago=None,
+                fecha=None,
+                estado='pendiente',
+            )
+            return transaccion
+        else:  # Asumimos que 'caso' es 'reembolso'
+            reembolso = Reembolso.objects.create(
+                #id_external=data['id'],
+                room=data.get('room'),
+                start_date=data.get('start_date'),
+                end_date=data.get('end_date'),
+                client=data.get('client_info').get('id'),
+                services=data.get('services'),
+                pagador=pagador,
+                destinatario=destinatario,
+                monto=data.get('total_price'),  # Usa un valor por defecto
+                descripcion="Cancelación de reserva",
+                fecha=timezone.now(),
+                estado='pendiente',
+            )
+            return reembolso
+
     # No se redirige en este caso, ya que estamos en el contexto de un consumidor
+
+
+# Enviar ID de la transaccion
+def enviar_id_transaccion(transaccion):
+    sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
+    cuerpo_mensaje = {
+        "id_transaction": transaccion.id_external,
+    }
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'initiated-transaction', cuerpo_mensaje)
+    return
+
 
 
 # Manejo del pago
@@ -94,7 +183,6 @@ def iniciar_transaccion(transaccion):
             print("Tarjeta invalida")
             transaccion.estado = 'fallido'
             transaccion.fecha = timezone.now()
-            transaccion.descripcion = "La tarjeta no es válida"
             transaccion.save()
 
             cuerpo_mensaje = {
@@ -103,7 +191,7 @@ def iniciar_transaccion(transaccion):
                 }   
 
             #Evento transaccion exitosa
-            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
+            publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'failed-transaction', cuerpo_mensaje)
             
             return (False, transaccion.descripcion)
         else:
@@ -122,7 +210,6 @@ def iniciar_transaccion(transaccion):
                 print("El saldo actual de su tarjeta es insuficiente")
                 transaccion.estado = 'fallido'
                 transaccion.fecha = timezone.now()
-                transaccion.descripcion = "Transaccion fallida"
 
                 cuerpo_mensaje = {
                     "estado": transaccion.estado,
@@ -130,7 +217,7 @@ def iniciar_transaccion(transaccion):
                 }   
 
                 #Evento transaccion exitosa
-                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionFallida', cuerpo_mensaje)
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'failed-transaction', cuerpo_mensaje)
 
                 return (False, "El saldo actual de su tarjeta es insuficiente")
             else:
@@ -141,15 +228,15 @@ def iniciar_transaccion(transaccion):
                 transaccion.estado = 'valido'
                 transaccion.fecha = timezone.now()
                 #print(transaccion.fecha)
-                transaccion.descripcion = "Transaccion exitosa"
                 transaccion.save()
 
                 cuerpo_mensaje = {
                     "estado": transaccion.estado,
+                    "redirect": "url",
                 }   
 
                 #Evento transaccion exitosa
-                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'transaccionValida', cuerpo_mensaje)
+                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'valid-transaction', cuerpo_mensaje)
 
                 # Generar y enviar facturas
                 factura_tipo_A = facturas.generar_factura_tipo_A('pagos/factura_tipo_A.html', transaccion)
@@ -179,13 +266,10 @@ def iniciar_reembolso(reembolso):
     sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
 
     # No tenemos base de datos. Solo será crear la nota de credito y enviarla por email.
-
+    print("REEEMBOLSOSOSOSO", reembolso.id_external, reembolso)
     #enviar evento de reembolso exitoso
-    cuerpo_mensaje = {
-        "estado": 'valido',
-    }   
 
-    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'reembolsoValido', cuerpo_mensaje)
+    #publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'valid-reimbursement', cuerpo_mensaje)
 
     print('etnro')
     notaDeCredito = facturas.generar_nota_credito('pagos/nota_credito.html', reembolso)
@@ -194,10 +278,10 @@ def iniciar_reembolso(reembolso):
 
     #enviar evento de generacion de nota de credito
     cuerpo_mensaje = {
-        "descripcion": "Nota de crédito enviada",
+        "descripcion": "enviada",
     }   
 
-    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'notaCreditoGenerada', cuerpo_mensaje)
+    publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'credit-note-generated', cuerpo_mensaje)
 
     return
 

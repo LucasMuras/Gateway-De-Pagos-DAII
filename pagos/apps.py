@@ -13,7 +13,7 @@ class PagosConfig(AppConfig):
 
     def ready(self):
         #from .consumidor_rabbitmq import escuchar_topicos
-        from .consumidor_rabbitmq import escuchar_sqs_mensajes, init_sqs_client
+        from .consumidor_sqs import escuchar_sqs_mensajes, init_sqs_client
         # Suscripción a los tópicos al iniciar la aplicación
         # Credenciales de AWS SNS
         AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')

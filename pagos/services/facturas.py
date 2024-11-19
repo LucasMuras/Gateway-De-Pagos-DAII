@@ -5,6 +5,7 @@ from xhtml2pdf import pisa
 from django.core.mail import EmailMessage
 from decouple import config
 from datetime import timedelta  
+import base64
 
 def calcular_ultima_fecha_cuota(fecha, cantidad_cuotas):
     if (cantidad_cuotas != None):
@@ -23,7 +24,7 @@ def generar_factura_tipo_B(template_src, transaccion):
     context_dict = {
         'fecha_hoy': transaccion.fecha,
         'fecha_ultima_cuota':  calcular_ultima_fecha_cuota(transaccion.fecha, transaccion.metodo_pago.cuotas),
-        'nombre_destinatario': transaccion.destinatario.nombre,
+        'nombre_destinatario': transaccion.destinatario.name,
         'cantidad_cuotas': transaccion.metodo_pago.cuotas,
         'subtotal_primera_cuota': calcular_subtotal(transaccion.monto, transaccion.metodo_pago.cuotas),
         'total': transaccion.monto,
@@ -47,7 +48,7 @@ def generar_factura_tipo_A(template_src, transaccion):
     context_dict = {
         'fecha_hoy': transaccion.fecha,
         'fecha_ultima_cuota':  calcular_ultima_fecha_cuota(transaccion.fecha, transaccion.metodo_pago.cuotas),
-        'nombre_destinatario': transaccion.destinatario.nombre,
+        'nombre_destinatario': transaccion.destinatario.name,
         'cantidad_cuotas': transaccion.metodo_pago.cuotas,
         'subtotal_primera_cuota': calcular_subtotal(transaccion.monto, transaccion.metodo_pago.cuotas),
         'total': transaccion.monto,
@@ -55,7 +56,7 @@ def generar_factura_tipo_A(template_src, transaccion):
         'ultimos_numero_tarjeta': transaccion.metodo_pago.tarjeta.numero[-4:],
         'fecha_vencimiento_tarjeta': transaccion.metodo_pago.tarjeta.fecha_vencimiento,
         'tipo_tarjeta': transaccion.metodo_pago.tarjeta.tipo,
-        'nombre_pagador': transaccion.pagador.nombre,
+        'nombre_pagador': transaccion.pagador.name,
         'email_pagador': transaccion.pagador.email,
     }
     template = get_template(template_src)
@@ -71,10 +72,9 @@ def generar_factura_tipo_A(template_src, transaccion):
 def generar_nota_credito(template_src, reembolso):
     context_dict = {
         'fecha_hoy': reembolso.fecha,
-        'nombre_destinatario': reembolso.destinatario.nombre,
+        'nombre_destinatario': reembolso.destinatario.name,
         'monto': reembolso.monto,
-        'nombre_pagador': reembolso.pagador.nombre,
-        'email_destinatario': reembolso.pagador.email,
+        'nombre_pagador': reembolso.pagador.name,
         'descripcion': reembolso.descripcion,
     }
     template = get_template(template_src)
@@ -145,3 +145,4 @@ def enviar_nota_pdf_por_email_pagador(nota_pdf, mail_pagador):
         email.attach('nota.pdf', nota_pdf, 'application/pdf')
 
     email.send()
+    
