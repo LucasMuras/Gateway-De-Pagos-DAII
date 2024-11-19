@@ -1,1 +1,10 @@
 .env
+# Ignorar el entorno virtual
+venv/
+
+# Ignorar archivos de caché de Python
+__pycache__/
+*.pyc
+
+# Archivos de base de datos (opcional, si no quieres versionarlos)
+db.sqlite3
