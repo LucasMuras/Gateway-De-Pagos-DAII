@@ -119,9 +119,8 @@ def detallesTransaccion(request, transaccion_id):
         transaccion = get_object_or_404(Transaccion, id_external=transaccion_id)
         if transaccion:
             transaccion_data = {
-                'nombre_destinatario': transaccion.destinatario.nombre,
+                'nombre_destinatario': transaccion.destinatario.name,
                 'monto': transaccion.monto,
-                'descripcion': transaccion.descripcion
             }
             return JsonResponse(transaccion_data)
         else:
