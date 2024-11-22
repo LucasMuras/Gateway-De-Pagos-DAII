@@ -186,14 +186,13 @@ def iniciar_transaccion(transaccion):
             transaccion.save()
 
             cuerpo_mensaje = {
-                    "estado": transaccion.estado,
-                    "descripcion": "La tarjeta no es válida"
+                    "reservation": transaccion.id_external,
                 }   
 
             #Evento transaccion exitosa
             publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'failed-transaction', cuerpo_mensaje)
             
-            return (False, transaccion.descripcion)
+            return (False, "La tarjeta no es válida")
         else:
             print(transaccion.metodo_pago.en_cuotas)
             # Verifico si eligió cuotas o en un pago unico
@@ -212,8 +211,7 @@ def iniciar_transaccion(transaccion):
                 transaccion.fecha = timezone.now()
 
                 cuerpo_mensaje = {
-                    "estado": transaccion.estado,
-                    "descripcion": "El saldo actual de su tarjeta es insuficiente"
+                    "reservation": transaccion.id_external
                 }   
 
                 #Evento transaccion exitosa
@@ -231,8 +229,12 @@ def iniciar_transaccion(transaccion):
                 transaccion.save()
 
                 cuerpo_mensaje = {
-                    "estado": transaccion.estado,
-                    "redirect": "url",
+                    "id": transaccion.id,
+                    "reservation": transaccion.id_external,
+                    "date_paid": transaccion.fecha.isoformat(),
+                    "last_four_digits": tarjeta.numero[-4:],
+                    "payment_method": transaccion.metodo_pago.tipo,
+                    "amount": float(transaccion.monto),
                 }   
 
                 #Evento transaccion exitosa
@@ -255,8 +257,8 @@ def iniciar_transaccion(transaccion):
                     "descripcion": "Facturas tipo A y B enviadas",
                 }   
 
-                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaClienteGenerada', cuerpo_mensaje)
-                publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaAdministradorGenerada', cuerpo_mensaje)
+                #publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaClienteGenerada', cuerpo_mensaje)
+                #publish_to_topic(sns_client, config("TOPIC_ARN_GATEWAYDEPAGOS"), 'facturaAdministradorGenerada', cuerpo_mensaje)
                 
                 return (True, "Transaccion completada de manera exitosa, esté pendiente a su casilla de email donde se le enviara la factura correspondiente")
             
@@ -264,6 +266,10 @@ def iniciar_transaccion(transaccion):
 # Manejo de un reembolso debido a cancelacion
 def iniciar_reembolso(reembolso):
     sns_client = init_sns_client(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_SESSION_TOKEN, AWS_DEFAULT_REGION)
+
+    # Elimino la transaccion
+    #transaccion = Transaccion.objects.get(id_external=reembolso.id_external)
+    #transaccion.delete()
 
     # No tenemos base de datos. Solo será crear la nota de credito y enviarla por email.
     print("REEEMBOLSOSOSOSO", reembolso.id_external, reembolso)
