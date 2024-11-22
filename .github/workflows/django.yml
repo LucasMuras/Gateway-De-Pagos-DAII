@@ -1,0 +1,48 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main  
+
+concurrency:
+    group: master
+    cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          cat >>~/.ssh/config <<END
+          Host target
+            HostName $SSH_HOST
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_rsa
+            LogLevel ERROR
+            StrictHostKeyChecking no
+          END
+          
+      - name: Run Deploy
+        env:
+          REPO_KEY: ${{ secrets.REPO_KEY }}
+        run: |
+          ssh target << 'EOF'
+            cd BackDDA2/
+            git pull https://github.com/KatherineDG/Gateway-De-Pagos-DAII
+            source venv/bin/activate
+            pip install -r requirements.txt
+            python manage.py migrate
+            pm2 start ecosystem.config.js
+          EOF
